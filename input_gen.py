@@ -74,8 +74,8 @@ def write_input_file(n, h):
         node_list = [] # list of (name, position), position = (x, y)
         # Generate nodes
         for i in range(total):
-            # 1.41*10**(9 + 5) is the result of sqrt(2billion) + accouting for 5 decimal places
-            temp = get_random_node(1.41*10 ** (9 + 5), 1.41*10 ** (9 + 5))
+            # sqrt(2e14) so the longest edge won't exceed the limit
+            temp = get_random_node(14142130, 14142130)
             node_list.append(["index" + str(i)] + temp)
 
         # Generate randomized edges
@@ -126,4 +126,7 @@ def write_input_file(n, h):
         return res
     raise RuntimeException('No valid graphs found within {} tries.'.format(RETRIES))
 
-write_input_file(10, 10)
+params = [(50, 25), (100, 50), (200, 100)]
+for p in params:
+    write_input_file(p[0], p[1])
+
