@@ -25,7 +25,7 @@ def get_random_node(max_x, max_y):
 def get_dis(x, y):
     return round(((x[1] - y[1])**2 + (x[2] - y[2])**2)**0.5, 5)
 
-def get_random_array(n, p, lista):
+def get_random_array(n, p, node_list):
     """Calculate distance between each point. If rand > p, then no edge.
     Also no self edge is allowed.
     Output: Adjacency matrix
@@ -38,7 +38,7 @@ def get_random_array(n, p, lista):
             if (i == j):
                 temp.append("x")
             else:
-                temp.append(get_dis(lista[i], lista[j]))
+                temp.append(get_dis(node_list[i], node_list[j]))
         result.append(temp)
     # Stochastically add edges
     for i in range(n):
@@ -59,62 +59,71 @@ def not_all_x(lst):
 # 1. Better error handling
 # 2. Better filenames
 def write_input_file(n, h):
-    """n: locations, int
+    """Input
+       n: locations, int
        h: homes, int
+
+       Output:
+       write to file in folder inputs/
+       res: adjacency matrix
     """
-    #total = np.random.randint(0, n) + 1
-    total = n
-    prob = 0.6 # default probabilty of an edge
-    lista = [] # list of (name, position), position = (x, y)
-    # Generate nodes
-    for i in range(total):
-        # 1.41*10**(9 + 5) is the largest 
-        temp = get_random_node(1.41*10 ** (9 + 5), 1.41*10 ** (9 + 5))
-        lista.append(["index" + str(i)] + temp)
-    
-    # Generate randomized edges
-    point_array = get_random_array(total, prob, lista)
+    RETRIES = 100 # Number of retries before giving up
+    for retry in range(RETRIES):
+        total = n
+        EDGE_PROB = 0.6 # default probabilty of an edge
+        node_list = [] # list of (name, position), position = (x, y)
+        # Generate nodes
+        for i in range(total):
+            # 1.41*10**(9 + 5) is the result of sqrt(2billion) + accouting for 5 decimal places
+            temp = get_random_node(1.41*10 ** (9 + 5), 1.41*10 ** (9 + 5))
+            node_list.append(["index" + str(i)] + temp)
 
-    # Find the largest SCC
-    location = [i[0] for i in lista] # Extract locations names
-    Adjacency_matrix = np.matrix(point_array)
-    # Read matrix into nx
-    G = nx.from_numpy_matrix(Adjacency_matrix, False, nx.Graph)
-    for i in range(total):
-        for j in range(i, total):
-            if point_array[i][j] == "x":
-                G.remove_edge(i, j)
+        # Generate randomized edges
+        # res: adjacency matrix to be returned
+        res = get_random_array(total, EDGE_PROB, node_list)
 
-    # Find the largest cc
-    largest_cc = list(max(nx.connected_components(G), key=len))
+        # Find the largest SCC
+        location = [i[0] for i in node_list] # Extract locations names
+        # Read matrix into an nx graph
+        G = nx.from_numpy_matrix(np.matrix(res), False, nx.Graph)
+        for i in range(total):
+            for j in range(i, total):
+                if res[i][j] == "x":
+                    G.remove_edge(i, j)
 
-    # Check if largest cc is valid
-    if len(largest_cc) < h:
-        return "no enough homes"
+        # Find the largest cc
+        largest_cc = list(max(nx.connected_components(G), key=len))
 
-    # Choose h homes from the largest cc
-    random.shuffle(largest_cc)
-    home = largest_cc[0:h]
-    home.sort()
-    home = [ "index"+ str(i) for i in home]
+        # Check if largest cc is valid
+        print(largest_cc)
+        if len(largest_cc) < h:
+            continue
 
-    # Write to output
-    f = open("input.in", "w")
-    f.write(str(total) + "\n")
-    l = len(home)
-    f.write(str(l) + "\n")
+        # Choose h homes from the largest cc
+        random.shuffle(largest_cc)
+        home = largest_cc[0:h]
+        home.sort()
+        home = [ "index"+ str(i) for i in home]
 
-    for i in range(total - 1):
-        f.write(str(location[i]) + " ")
-    f.write(str(location[total - 1]) + "\n")
-    for i in range(l - 1):
-        f.write(str(home[i]) + " ")
-    f.write(str(home[l - 1]) + "\n")
-    f.write(str(random.choice(home)) + "\n")
-    for i in range(total):
-        for j in range(total - 1):
-            f.write(str(point_array[i][j]) + " ")
-        f.write(str(point_array[i][total-1]) + "\n")
-    return point_array
+        # Write to output
+        f = open("inputs/{}L_{}H.in".format(n, h), "w")
+        f.write(str(total) + "\n")
+        l = len(home)
+        f.write(str(l) + "\n")
 
-print(write_input_file(200, 100))
+        for i in range(total - 1):
+            f.write(str(location[i]) + " ")
+        f.write(str(location[total - 1]) + "\n")
+        for i in range(l - 1):
+            f.write(str(home[i]) + " ")
+        f.write(str(home[l - 1]) + "\n")
+        f.write(str(random.choice(home)) + "\n")
+        for i in range(total):
+            for j in range(total - 1):
+                f.write(str(res[i][j]) + " ")
+            f.write(str(res[i][total-1]) + "\n")
+        print('Found graph in {} tries.'.format(retry + 1))
+        return res
+    raise RuntimeException('No valid graphs found within {} tries.'.format(RETRIES))
+
+write_input_file(10, 10)
