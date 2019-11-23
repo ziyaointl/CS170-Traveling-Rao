@@ -93,9 +93,9 @@ def write_input_file(n, h):
 
         # Find the largest cc
         largest_cc = list(max(nx.connected_components(G), key=len))
+        cc_sizes = [len(cc) for cc in nx.connected_components(G)]
 
         # Check if largest cc is valid
-        print(largest_cc)
         if len(largest_cc) < h:
             continue
 
@@ -106,7 +106,7 @@ def write_input_file(n, h):
         home = [ "index"+ str(i) for i in home]
 
         # Write to output
-        f = open("inputs/{}L_{}H.in".format(n, h), "w")
+        f = open("inputs/{}.in".format(n), "w")
         f.write(str(total) + "\n")
         l = len(home)
         f.write(str(l) + "\n")
@@ -123,6 +123,8 @@ def write_input_file(n, h):
                 f.write(str(res[i][j]) + " ")
             f.write(str(res[i][total-1]) + "\n")
         print('Found graph in {} tries.'.format(retry + 1))
+        print('Graph has {} vertices, {} homes, and connected components of sizes {}'.format(n, h, cc_sizes))
+        print('Wrote', "inputs/{}.in".format(n))
         return res
     raise RuntimeException('No valid graphs found within {} tries.'.format(RETRIES))
 
