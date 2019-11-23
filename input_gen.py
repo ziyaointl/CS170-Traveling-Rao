@@ -70,7 +70,7 @@ def write_input_file(n, h):
     RETRIES = 100 # Number of retries before giving up
     for retry in range(RETRIES):
         total = n
-        EDGE_PROB = 0.6 # default probabilty of an edge
+        EDGE_PROB = 0.8 # default probabilty of an edge
         node_list = [] # list of (name, position), position = (x, y)
         # Generate nodes
         for i in range(total):
