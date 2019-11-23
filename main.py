@@ -6,9 +6,9 @@ SCALE = 1000
 
 def show_graph(G):
     print(G.edges())
-    pos = nx.spring_layout(G)
+    pos = nx.spring_layout(G, k=0.2,iterations=20, weight='weight')
     labels = nx.get_edge_attributes(G,'weight')
-    nx.draw_networkx_nodes(G, pos, node_size=700)
+    nx.draw_networkx_nodes(G, pos)
     nx.draw_networkx_edges(G, pos)
     nx.draw_networkx_labels(G, pos, font_size=20, font_family='sans-serif')
     nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
