@@ -63,6 +63,9 @@ def shake(G, potential_sol, phi):
     # return potential_sol_final
     pass
 
+def calc_cost(G, path, homes):
+    pass
+
 def solve(G, offers, start, homes, l=10, phi=0.35, phi_delta=0.01):
     """Input:
     G: Complete graph
