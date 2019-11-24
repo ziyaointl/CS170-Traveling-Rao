@@ -20,6 +20,9 @@ def main(filename='50'):
 
     # 4. Write to file
 
+def deepcopy(sol):
+    pass
+
 def l_consecutive_drop(G, potential_sol, l):
     """Input:
     G: graph
@@ -85,7 +88,7 @@ def solve(G, offers, start, homes, l=10, phi=0.35, phi_delta=0.01):
     sol = {
             'path': TSP(G, s)
           }
-    sol['cost'] = calc_cost(G, sol['path']) # TODO: Write calc_cost, with reference to a similar function in student_utils.py
+    sol['cost'] = calc_cost(G, sol['path'], homes) # TODO: Write calc_cost, with reference to a similar function in student_utils.py
     potential_sol = deepcopy(sol) # TODO: Implement deepcopy
     while phi > 0:
         while True:
