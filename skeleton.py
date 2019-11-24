@@ -84,7 +84,7 @@ def calc_cost(G, path, homes, offers):
     """
     cheapest_prices = defaultdict(lambda: float('inf'))
     for l in path:
-        for h in offers:
+        for h in homes:
             cheapest_prices[h] = min(cheapest_prices[h], offers[l][h])
     return sum([cheapest_prices[h] for h in homes])
 
