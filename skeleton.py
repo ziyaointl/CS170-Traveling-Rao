@@ -1,5 +1,4 @@
 import sys
-
 sys.path.append('..')
 sys.path.append('../..')
 import os
@@ -11,7 +10,7 @@ import numpy as np
 from student_utils import *
 from concorde.tsp import TSPSolver
 from collections import defaultdict
-
+from preprocess import preprocess
 
 def main(filename='50'):
     """Given a filename, genereate a solution, and save it to filename.out
@@ -20,21 +19,17 @@ def main(filename='50'):
     input_data = utils.read_file('inputs/' + str(filename) + '.in')
     num_of_locations, num_houses, list_locations, list_houses, starting_car_location, adjacency_matrix = data_parser(
         input_data)
+    SCALE = 10000000
 
     # 2. Preprocess adjacency matrix
-    # a. Generate a mapping from locations to node index in a hashmap
-    # b. Put adjacency matrix in networkx
-    # c. Remove all node not connected to start
-    # d. Run networkx all_pairs_shortest_path
-    # e. Run floyd-warshall to get all pair-wise shortest distances
-    # f. Complete the graph using pair-wise shortest distances
-    # g. Generate product prices using pair-wise shortest distances
-    # h. Update all edges in G to 2/3
-    location_mapping, offers, G = preprocess(num_of_locations, num_houses, list_locations, list_houses,
-                                             starting_car_location, adjacency_matrix)
-
+    G, location_mapping, offers, shortest_paths = preprocess(num_of_locations, num_houses, list_locations, list_houses,
+                                             starting_car_location, adjacency_matrix, SCALE)
+    print('locations', location_mapping)
+    print('offers', offers)
+    print('shortest_paths', shortest_paths)
+    print(nx.to_numpy_matrix(G)) 
     # 3. Solve
-    res = solve(G, offers, start_car_location)
+    # res = solve(G, offers, start_car_location)
 
     # 4. Write to file
 
@@ -278,4 +273,4 @@ def TSP(G, nodes):
 
 
 if __name__ == '__main__':
-    main()
+    main('test')

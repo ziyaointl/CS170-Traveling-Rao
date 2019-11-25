@@ -3,24 +3,18 @@ import numpy as np
 from student_utils import *
 import utils
 
-def preprocess(num_of_locations, num_houses, list_locations, list_houses, starting_car_location, adjacency_matrix):
+def preprocess(num_of_locations, num_houses, list_locations, list_houses, starting_car_location, adjacency_matrix, scale):
     """
     Preprocess adjacency matrix
 
-    d. Run networkx all_pairs_shortest_path
-    e. Run floyd-warshall to get all pair-wise shortest distances
-    f. Complete the graph using pair-wise shortest distances
-    g. Generate product prices using pair-wise shortest distances
-    h. Update all edges in G to 2/3
-
-    return the mapping from locations to index, the product prices(dict({location_index, dict({house_index, price})})),
-    and the networkx preprocessed graph
+    Output:
+    G: networkx graph,
+    map_locations: mapping from locations to index { String -> Integer },
+    product_prices: { location_index -> {house_index -> price} },
+    shortest_paths: shortest paths found from the original adjacency matrix, Dictionary: { node1 -> { node2 -> [shortest_path] } }
     """
-
-    # a. Scale all weights by SCALE
-    SCALE = 10000000
-    adjacency_matrix = [[int(w*SCALE) if w != 'x' else w for w in row] for row in adjacency_matrix]
-    print(adjacency_matrix)
+    # a. Scale all weights by scale
+    adjacency_matrix = [[int(w*scale) if w != 'x' else w for w in row] for row in adjacency_matrix]
 
     # b. Generate a mapping from locations to node index in a hashmap
     map_locations = {}
@@ -43,7 +37,6 @@ def preprocess(num_of_locations, num_houses, list_locations, list_houses, starti
                 if weight != 'x':
                     G.add_edge(j, k)
                     G.edges[j, k]['weight'] = weight
-                    print(G[j][k])
 
     # d. Run networkx all_pairs_shortest_path
     shortest_paths = dict(nx.all_pairs_dijkstra_path(G))
@@ -58,7 +51,7 @@ def preprocess(num_of_locations, num_houses, list_locations, list_houses, starti
                 G.add_edge(m, n)
             G.edges[m, n]['weight'] = shortest_paths_len[m][n]
 
-    #part g
+    # g. Generate product prices using pair-wise shortest distances
     product_prices = {}
     for m in range(num_of_locations):
         local_prices = {}
@@ -67,9 +60,9 @@ def preprocess(num_of_locations, num_houses, list_locations, list_houses, starti
             local_prices[index_house] = G.edges[m, index_house]['weight']
         product_prices[m] = local_prices
 
-    #part h
+    # h. Update all edges in G to 2/3 & round to int
     for m in range(num_of_locations):
         for n in range(m + 1, num_of_locations):
-            G.edges[m, n]['weight'] *= 2/3
+            G.edges[m, n]['weight'] = int(G[m][n]['weight'] * 2/3)
 
-    return map_locations, product_prices, G
+    return G, map_locations, product_prices, shortest_paths
