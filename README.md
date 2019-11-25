@@ -7,6 +7,6 @@ pip3 install --user networkx
 
 git clone https://github.com/jvkersch/pyconcorde
 cd pyconcorde
-pip3 install -e .
+pip3 install --user -e .
 ```
 
