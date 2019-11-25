@@ -6,9 +6,8 @@ import utils
 def preprocess(num_of_locations, num_houses, list_locations, list_houses, starting_car_location, adjacency_matrix):
     """
     Preprocess adjacency matrix
-    a. Generate a mapping from locations to node index in a hashmap
-    b. Put adjacency matrix in networkx
-    c. Remove all node not connected to start
+    b. Generate a mapping from locations to node index in a hashmap
+    c. Put adjacency matrix in networkx
     d. Run networkx all_pairs_shortest_path
     e. Run floyd-warshall to get all pair-wise shortest distances
     f. Complete the graph using pair-wise shortest distances
@@ -19,14 +18,19 @@ def preprocess(num_of_locations, num_houses, list_locations, list_houses, starti
     and the networkx preprocessed graph
     """
 
-    #part a
+    # a. Scale all weights by SCALE
+    SCALE = 10000000
+    adjacency_matrix = [[int(w*SCALE) if w != 'x' else w for w in row] for row in adjacency_matrix]
+    print(adjacency_matrix)
+
+    #part b
     map_locations = {}
     index = 0
     for location in list_locations:
         map_locations[location] = index
         index += 1
 
-    #part b
+    #part c
     G = nx.Graph()
     for i in range(num_of_locations):
         G.add_node(i)
@@ -40,12 +44,6 @@ def preprocess(num_of_locations, num_houses, list_locations, list_houses, starti
                 if weight != 'x':
                     G.add_edge(j, k)
                     G.edges[j, k]['weight'] = weight
-
-    #part c not necessary
-    #reachable = list(nx.dfs_preorder_nodes(G, source = map_locations[starting_car_location]))
-    #for i in range(num_locations):
-    #    if i not in reachable:
-    #        G.remove_node(i)
 
     #part d, e
     length = dict(nx.all_pairs_dijkstra_path_length(G, weight='weight'))
