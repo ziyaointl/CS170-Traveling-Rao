@@ -12,6 +12,71 @@ from concorde.tsp import TSPSolver
 from collections import defaultdict
 from preprocess import preprocess
 
+def TSP(G, nodes, start):
+    """Returns an approximate TSP solution
+    Input:
+    G: networkx graph
+    nodes: we want to find a cycle among these nodes
+    Function might be useful TODO subgraph = G.subgraph(nodes)
+
+    Output:
+    cycle: solution
+    """
+
+    def gen_output(G, filename):
+        """Input:
+        G: graph
+        filename: tsp file to be written
+        """
+        fout = open(filename, 'w')
+        fout.write('NAME : ' + filename + '\n')
+        fout.write('TYPE : TSP\n')
+        fout.write('DIMENSION : ' + str(len(G.nodes())) + '\n')
+        fout.write('EDGE_WEIGHT_TYPE : EXPLICIT\n')
+        fout.write('EDGE_WEIGHT_FORMAT : FULL_MATRIX\n')
+
+        fout.write('EDGE_WEIGHT_SECTION :\n')
+        sorted_nodes = sorted(G.nodes())
+        lines = []
+        for v in sorted_nodes:
+            line = []
+            for w in sorted_nodes:
+                line.append(str(G[v][w]['weight']))
+            lines.append(' '.join(line))
+        fout.write('\n'.join(lines))
+        fout.write('\nEOF\n')
+        fout.close()
+
+    # Reduce G to specified node list
+    G = nx.subgraph(G, nodes)
+
+    # Generate mapping
+    # Maps sorted(G.nodes()).index(concorde_index) -> node
+    sorted_nodes = sorted(G.nodes())
+
+    def concorde_index_to_node(concorde_index):
+        return sorted_nodes[concorde_index]
+
+    def node_to_concorde_index(node):
+        return sorted_nodes.index(node)
+
+    # Create data
+    filename = "test.tsp"
+    gen_output(G, "test.tsp")
+
+    # Call Concorde
+    solver = TSPSolver.from_tspfile(filename)
+    solution = solver.solve()
+
+    # Transform points back & return path
+    path = [concorde_index_to_node(concorde_index) for concorde_index in solution.tour]
+
+    # Roatate path so that start is at the start
+    for i in range(len(path)):
+        if path[i] == start:
+            path = path[i:] + path[:i] + [start]
+    return path
+
 def main(filename='50'):
     """Given a filename, genereate a solution, and save it to filename.out
     """
@@ -19,7 +84,7 @@ def main(filename='50'):
     input_data = utils.read_file('inputs/' + str(filename) + '.in')
     num_of_locations, num_houses, list_locations, list_houses, starting_car_location, adjacency_matrix = data_parser(
         input_data)
-    SCALE = 10000000
+    SCALE = 100000
 
     # 2. Preprocess adjacency matrix
     G, location_mapping, offers, shortest_paths = preprocess(num_of_locations, num_houses, list_locations, list_houses,
@@ -27,9 +92,11 @@ def main(filename='50'):
     print('locations', location_mapping)
     print('offers', offers)
     print('shortest_paths', shortest_paths)
-    print(nx.to_numpy_matrix(G)) 
+    print(nx.to_numpy_matrix(G))  
+    print('TSP', TSP(G, G.nodes(), location_mapping[starting_car_location]))
+    
     # 3. Solve
-    # res = solve(G, offers, start_car_location)
+    # res = solve(G, offers, location_mapping[starting_car_location])
 
     # 4. Write to file
 
@@ -211,66 +278,5 @@ def solve(G, offers, start, homes, l=10, phi=0.35, phi_delta=0.01):
         phi -= phi_delta
     return sol
 
-
-def TSP(G, nodes):
-    """Returns an approximate TSP solution
-    Input:
-    G: networkx graph
-    nodes: we want to find a cycle among these nodes
-    Function might be useful TODO subgraph = G.subgraph(nodes)
-
-    Output:
-    cycle: solution
-    """
-
-    def gen_output(G, filename):
-        """Input:
-        G: graph
-        filename: tsp file to be written
-        """
-        fout = open(filename, 'w')
-        fout.write('NAME : ' + filename + '\n')
-        fout.write('TYPE : TSP\n')
-        fout.write('DIMENSION : ' + str(len(G.nodes())) + '\n')
-        fout.write('EDGE_WEIGHT_TYPE : EXPLICIT\n')
-        fout.write('EDGE_WEIGHT_FORMAT : FULL_MATRIX\n')
-
-        fout.write('EDGE_WEIGHT_SECTION :\n')
-        sorted_nodes = sorted(G.nodes())
-        lines = []
-        for v in sorted_nodes:
-            line = []
-            for w in sorted_nodes:
-                line.append(str(G[v][w]['weight']))
-            lines.append(' '.join(line))
-        fout.write('\n'.join(lines))
-        fout.write('EOF\n')
-        fout.close()
-
-    # Reduce G to specified node list
-    G = nx.subgraph(nodes)
-
-    # Generate mapping
-    # Maps sorted(G.nodes()).index(concorde_index) -> node
-    sorted_nodes = sorted(G.nodes())
-
-    def concorde_index_to_node(concorde_index):
-        return sorted_nodes[concorde_index]
-
-    def node_to_concorde_index(node):
-        return sorted_nodes.index(node)
-
-    # Create data
-    filename = "test.tsp"
-    gen_output(G, "test.tsp")
-
-    # Call Concorde
-    solver = TSPSolver.from_tspfile(filename)
-    solution = solver.solve()
-
-    # Transform points back & return path
-    return [concorde_index_to_node(concorde_index) for concorde_index in solution.tour]
-
-
 if __name__ == '__main__':
-    main('test')
+    main('200')
