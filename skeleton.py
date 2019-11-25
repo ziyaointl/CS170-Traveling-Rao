@@ -122,7 +122,7 @@ def shake(G, potential_sol, phi, phi_delta):
 
 def verify_path(G, path, homes, start):
     assert len(path) > 0, "Nothing in path"
-    assert path[0] == start and path[-1] == start, "First and last nodes have to start"
+    assert path[0] == start and path[-1] == start, "First and last nodes have to be start"
 
 def calc_cost(G, path, homes, offers):
     """Input:
@@ -135,10 +135,13 @@ def calc_cost(G, path, homes, offers):
     res: a single integer, cost of the current path
     """
     cheapest_prices = defaultdict(lambda: float('inf'))
+    travel_cost = 0
     for l in path:
         for h in homes:
             cheapest_prices[h] = min(cheapest_prices[h], offers[l][h])
-    return sum([cheapest_prices[h] for h in homes])
+    for i in range(1, len(path)):
+        travel_cost += G[path[i-1]][path[i]]['weight']
+    return sum([cheapest_prices[h] for h in homes]) + travel_cost
 
 def solve(G, offers, start, homes, l=10, phi=0.35, phi_delta=0.01):
     """Input:
