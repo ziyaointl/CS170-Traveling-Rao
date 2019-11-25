@@ -1,9 +1,11 @@
 import sys
+
 sys.path.append('..')
 sys.path.append('../..')
 import os
 import argparse
 import utils
+import copy as cp
 import networkx as nx
 import numpy as np
 from student_utils import *
@@ -16,7 +18,8 @@ def main(filename='50'):
     """
     # 1. Read input
     input_data = utils.read_file('inputs/' + str(filename) + '.in')
-    num_of_locations, num_houses, list_locations, list_houses, starting_car_location, adjacency_matrix = data_parser(input_data)
+    num_of_locations, num_houses, list_locations, list_houses, starting_car_location, adjacency_matrix = data_parser(
+        input_data)
 
     # 2. Preprocess adjacency matrix
     # a. Generate a mapping from locations to node index in a hashmap
@@ -27,16 +30,19 @@ def main(filename='50'):
     # f. Complete the graph using pair-wise shortest distances
     # g. Generate product prices using pair-wise shortest distances
     # h. Update all edges in G to 2/3
-    location_mapping, offers, G = preprocess(num_of_locations, num_houses, list_locations, list_houses, starting_car_location, adjacency_matrix)
+    location_mapping, offers, G = preprocess(num_of_locations, num_houses, list_locations, list_houses,
+                                             starting_car_location, adjacency_matrix)
 
     # 3. Solve
     res = solve(G, offers, start_car_location)
 
     # 4. Write to file
 
+
 def deepcopy(sol):
-    assert type(sol) == dict, "deepcopy only works for dictionary!"
-    pass
+    assert type(sol) == dict, "deepcopy only works for a solution (type dictionary)!"
+    return cp.deepcopy(sol)
+
 
 def l_consecutive_drop(G, potential_sol, l):
     """Input:
@@ -52,8 +58,9 @@ def l_consecutive_drop(G, potential_sol, l):
             pass
     pass
 
-def helper_add(G, sol, node):
-    cycle = sol['path'] #cycle is a list of integer
+
+def helper_add(G, sol, node, homes, offers):
+    cycle = sol['path']  # cycle is a list of integer
     assert node not in cycle, "node added must not in the cycle"
     new_list = cycle[:] + [node]
     solution = TSP(G, new_list)
@@ -72,13 +79,14 @@ def helper_add(G, sol, node):
     new_sol['cost'] = calc_cost(G, solution, homes, offers)
     return new_sol
 
-def insert(G, potential_sol):
+
+def insert(G, potential_sol, homes, offers):
     """Input:
     G: graph
     potential_sol: dictionary, as defined in solve()
 
     Output:
-    potential_sol: possibly imporved solution
+    potential_sol: possibly improved solution
     """
     # Add a new vertex to the current solution if such insertion implies a reduction in total cost
     # the node that must maximize the reduction in cost!
@@ -89,14 +97,13 @@ def insert(G, potential_sol):
         if node in potential_sol['path']:
             print("edge_cases responsible by Rui Chen in insert")
             continue
-        temp = helper_add(G, potential_sol, node)
+        temp = helper_add(G, potential_sol, node, homes, offers)
         if temp['cost'] < optimal['cost']:
             optimal = temp
     return optimal
 
 
-
-def shake(G, potential_sol, phi, phi_delta):
+def shake(G, potential_sol, phi, homes, offers):
     """Input:
     G: graph
     potential_sol: dictionary, as defined in solve()
@@ -109,20 +116,21 @@ def shake(G, potential_sol, phi, phi_delta):
     total = list(G.nodes)
     li_dif = [i for i in total if i not in potential_sol['path']]
     for node in li_dif:
-       potential_sol_cp = deepcopy(potential_sol)
+        potential_sol_cp = deepcopy(potential_sol)
 
-    #    add_node adds in the order that minimizes x_1 + x_2 - y
-    #    (x_1,x_2 represents the distance to the node, y represents the distance between two vertexs in the existing circle)
+        #    add_node adds in the order that minimizes x_1 + x_2 - y
+        #    (x_1,x_2 represents the distance to the node, y represents the distance between two vertexs in the existing circle)
 
-       potential_sol_cp = helper_add(G, potential_sol_cp, node)
-       if potential_sol_cp['cost'] < (phi + 1) * potential_sol['cost']:
-            potential_sol_final = helper_add(G, potential_sol_final, node)
+        potential_sol_cp = helper_add(G, potential_sol_cp, node, homes, offers)
+        if potential_sol_cp['cost'] < (phi + 1) * potential_sol['cost']:
+            potential_sol_final = helper_add(G, potential_sol_final, node, homes, offers)
     return potential_sol_final
 
 
 def verify_path(G, path, homes, start):
     assert len(path) > 0, "Nothing in path"
     assert path[0] == start and path[-1] == start, "First and last nodes have to be start"
+
 
 def calc_cost(G, path, homes, offers):
     """Input:
@@ -140,8 +148,9 @@ def calc_cost(G, path, homes, offers):
         for h in homes:
             cheapest_prices[h] = min(cheapest_prices[h], offers[l][h])
     for i in range(1, len(path)):
-        travel_cost += G[path[i-1]][path[i]]['weight']
+        travel_cost += G[path[i - 1]][path[i]]['weight']
     return sum([cheapest_prices[h] for h in homes]) + travel_cost
+
 
 def solve(G, offers, start, homes, l=10, phi=0.35, phi_delta=0.01):
     """Input:
@@ -160,21 +169,23 @@ def solve(G, offers, start, homes, l=10, phi=0.35, phi_delta=0.01):
     """
     # A dictionary of solution info
     sol = {
-            'path': TSP(G, s)
-          }
-    sol['cost'] = calc_cost(G, sol['path'], homes) # TODO: Write calc_cost, with reference to a similar function in student_utils.py
-    potential_sol = deepcopy(sol) # TODO: Implement deepcopy
+        'path': TSP(G, homes + [start])
+    }
+    sol['cost'] = calc_cost(G, sol['path'],
+                            homes)  # TODO: Write calc_cost, with reference to a similar function in student_utils.py
+    potential_sol = deepcopy(sol)  # TODO: Implement deepcopy
     while phi > 0:
         while True:
             potential_sol = l_consecutive_drop(potential_sol, l)
-            potential_sol = insert(G, potential_sol)
+            potential_sol = insert(G, potential_sol, homes, offers)
             if potential_sol['cost'] < sol['cost']:
                 sol = potential_sol
             else:
                 break
-        shake(G, potential_sol, phi, phi_delta)
+        shake(G, potential_sol, phi, homes, offers)
         phi -= phi_delta
     return sol
+
 
 def TSP(G, nodes):
     """Returns an approximate TSP solution
@@ -186,29 +197,30 @@ def TSP(G, nodes):
     Output:
     cycle: solution
     """
+
     def gen_output(G, filename):
         """Input:
         G: graph
         filename: tsp file to be written
         """
-    	fout = open(filename, 'w')
-    	fout.write('NAME : ' + filename + '\n')
-    	fout.write('TYPE : TSP\n')
-    	fout.write('DIMENSION : ' + str(len(G.nodes())) + '\n')
-    	fout.write('EDGE_WEIGHT_TYPE : EXPLICIT\n')
-    	fout.write('EDGE_WEIGHT_FORMAT : FULL_MATRIX\n')
+        fout = open(filename, 'w')
+        fout.write('NAME : ' + filename + '\n')
+        fout.write('TYPE : TSP\n')
+        fout.write('DIMENSION : ' + str(len(G.nodes())) + '\n')
+        fout.write('EDGE_WEIGHT_TYPE : EXPLICIT\n')
+        fout.write('EDGE_WEIGHT_FORMAT : FULL_MATRIX\n')
 
-    	fout.write('EDGE_WEIGHT_SECTION :\n')
-    	sorted_nodes = sorted(G.nodes())
+        fout.write('EDGE_WEIGHT_SECTION :\n')
+        sorted_nodes = sorted(G.nodes())
         lines = []
-    	for v in sorted_nodes:
-    	    line = []
+        for v in sorted_nodes:
+            line = []
             for w in sorted_nodes:
-                line.append(str(G[v][w]['weight'])) 
-    	    lines.append(' '.join(line))
-    	fout.write('\n'.join(lines))
-    	fout.write('EOF\n')
-    	fout.close()
+                line.append(str(G[v][w]['weight']))
+            lines.append(' '.join(line))
+        fout.write('\n'.join(lines))
+        fout.write('EOF\n')
+        fout.close()
 
     # Reduce G to specified node list
     G = nx.subgraph(nodes)
@@ -216,8 +228,10 @@ def TSP(G, nodes):
     # Generate mapping
     # Maps sorted(G.nodes()).index(concorde_index) -> node
     sorted_nodes = sorted(G.nodes())
+
     def concorde_index_to_node(concorde_index):
         return sorted_nodes[concorde_index]
+
     def node_to_concorde_index(node):
         return sorted_nodes.index(node)
 
@@ -232,6 +246,6 @@ def TSP(G, nodes):
     # Transform points back & return path
     return [concorde_index_to_node(concorde_index) for concorde_index in solution.tour]
 
+
 if __name__ == '__main__':
     main()
-
