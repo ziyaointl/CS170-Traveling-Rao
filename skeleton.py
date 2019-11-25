@@ -7,8 +7,9 @@ import utils
 import networkx as nx
 import numpy as np
 from student_utils import *
-
+from concorde.tsp import TSPSolver
 from collections import defaultdict
+
 
 def main(filename='50'):
     """Given a filename, genereate a solution, and save it to filename.out
@@ -125,7 +126,7 @@ def verify_path(G, path, homes, start):
 def calc_cost(G, path, homes, offers):
     """Input:
     G: a complete graph
-    path: valid candidate path
+    path: valid candidate path, List : [Integer]
     homes: A list of homes
     offers: Products offered at each market, Dictionary : {location -> {home -> price}}
 
@@ -181,7 +182,51 @@ def TSP(G, nodes):
     Output:
     cycle: solution
     """
-    pass
+    def gen_output(G, filename):
+        """Input:
+        G: graph
+        filename: tsp file to be written
+        """
+    	fout = open(filename, 'w')
+    	fout.write('NAME : ' + filename + '\n')
+    	fout.write('TYPE : TSP\n')
+    	fout.write('DIMENSION : ' + str(len(G.nodes())) + '\n')
+    	fout.write('EDGE_WEIGHT_TYPE : EXPLICIT\n')
+    	fout.write('EDGE_WEIGHT_FORMAT : FULL_MATRIX\n')
+
+    	fout.write('EDGE_WEIGHT_SECTION :\n')
+    	sorted_nodes = sorted(G.nodes())
+        lines = []
+    	for v in sorted_nodes:
+    	    line = []
+            for w in sorted_nodes:
+                line.append(str(G[v][w]['weight'])) 
+    	    lines.append(' '.join(line))
+    	fout.write('\n'.join(lines))
+    	fout.write('EOF\n')
+    	fout.close()
+
+    # Reduce G to specified node list
+    G = nx.subgraph(nodes)
+
+    # Generate mapping
+    # Maps sorted(G.nodes()).index(concorde_index) -> node
+    sorted_nodes = sorted(G.nodes())
+    def concorde_index_to_node(concorde_index):
+        return sorted_nodes[concorde_index]
+    def node_to_concorde_index(node):
+        return sorted_nodes.index(node)
+
+    # Create data
+    filename = "test.tsp"
+    gen_output(G, "test.tsp")
+
+    # Call Concorde
+    solver = TSPSolver.from_tspfile(filename)
+    solution = solver.solve()
+
+    # Transform points back & return path
+    return [concorde_index_to_node(concorde_index) for concorde_index in solution.tour]
 
 if __name__ == '__main__':
     main()
