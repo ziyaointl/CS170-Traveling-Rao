@@ -44,19 +44,49 @@ def deepcopy(sol):
     return cp.deepcopy(sol)
 
 
-def l_consecutive_drop(G, potential_sol, l):
+def l_drop(G, potential_sol, l, start_location, homes, offers):
+    """Input:
+    G: graph
+    potential_sol: dictionary, as defined in solve()
+    l: length of path to be dropped
+    start_location: start index of the path being dropped
+    homes: A list of homes
+    offers: Products offered at each market, Dictionary : {location -> {home -> price}}
+
+    Output:
+    new_sol: Solution after dropping l
+    """
+    new_sol = deepcopy(potential_sol)
+    new_sol['path'] = new_sol['path'][:start_location] + new_sol['path'][start_location+l:]
+    new_sol['cost'] = calc_cost(G, new_sol['path'], homes, offers) 
+    return new_sol
+
+def l_consecutive_drop(G, potential_sol, l, homes, offers):
     """Input:
     G: graph
     potential_sol: dictionary, as defined in solve()
     l: start value for l. 1 <= l < len(potential_sol['path'])
+    homes: A list of homes
+    offers: Products offered at each market, Dictionary : {location -> {home -> price}}
 
     Output:
     potential_sol: possibly improved solution
     """
+    final_sol = potential_sol
     while l > 0:
-        for i in range(l):
-            pass
-    pass
+        path = potential_sol['path']
+        # Find the largest cost improvement drop
+        for i in range(1, len(path)):
+            new_sol = l_drop(G, potential_sol, l, start_node)
+            if (final_sol['cost'] > new_sol['cost']):
+                final_sol = new_sol
+        # If cost did not decrease after drop, decrease l
+        if final_sol['cost'] == potential_sol['cost']:
+            l -= 1
+        # Else, try again with the same l
+        else:
+            potential_sol = final_sol
+    return final_sol
 
 
 def helper_add(G, sol, node, homes, offers):
@@ -176,8 +206,8 @@ def solve(G, offers, start, homes, l=10, phi=0.35, phi_delta=0.01):
     potential_sol = deepcopy(sol)  # TODO: Implement deepcopy
     while phi > 0:
         while True:
-            potential_sol = l_consecutive_drop(potential_sol, l)
-            potential_sol = insert(G, potential_sol, homes, offers)
+            potential_sol = l_consecutive_drop(G, potential_sol, l, homes, offers) 
+            potential_sol = insert(G, potential_sol)
             if potential_sol['cost'] < sol['cost']:
                 sol = potential_sol
             else:
