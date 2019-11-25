@@ -8,6 +8,7 @@ import networkx as nx
 import numpy as np
 from student_utils import *
 
+from collections import defaultdict
 
 def main(filename='50'):
     """Given a filename, genereate a solution, and save it to filename.out
@@ -102,8 +103,25 @@ def shake(G, potential_sol, phi):
     # return potential_sol_final
     pass
 
-def calc_cost(G, path, homes):
-    pass
+def verify_path(G, path, homes, start):
+    assert len(path) > 0, "Nothing in path"
+    assert path[0] == start and path[-1] == start, "First and last nodes have to start"
+
+def calc_cost(G, path, homes, offers):
+    """Input:
+    G: a complete graph
+    path: valid candidate path
+    homes: A list of homes
+    offers: Products offered at each market, Dictionary : {location -> {home -> price}}
+
+    Output:
+    res: a single integer, cost of the current path
+    """
+    cheapest_prices = defaultdict(lambda: float('inf'))
+    for l in path:
+        for h in homes:
+            cheapest_prices[h] = min(cheapest_prices[h], offers[l][h])
+    return sum([cheapest_prices[h] for h in homes])
 
 def solve(G, offers, start, homes, l=10, phi=0.35, phi_delta=0.01):
     """Input:
