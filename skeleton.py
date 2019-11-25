@@ -33,6 +33,7 @@ def main(filename='50'):
     # 4. Write to file
 
 def deepcopy(sol):
+    assert type(sol) == dict, "deepcopy only works for dictionary!"
     pass
 
 def l_consecutive_drop(G, potential_sol, l):
@@ -64,10 +65,10 @@ def helper_add(G, sol, node):
                 continue
             else:
                 s = -G[node_i][node_j]['weight'] + G[node_i][node]['weight'] + G[node_j][node]['weight']"""
-    new_sol = deepcopy(sol)
+    new_sol = {}
     new_sol['path'] = solution
-    new_sol['cost'] = calc_cost(G, )
-    return
+    new_sol['cost'] = calc_cost(G, solution, homes, offers)
+    return new_sol
 
 def insert(G, potential_sol):
     """Input:
@@ -79,13 +80,21 @@ def insert(G, potential_sol):
     """
     # Add a new vertex to the current solution if such insertion implies a reduction in total cost
     # the node that must maximize the reduction in cost!
-    for node in list(G.nodes):
-        pass
-    pass
+    optimal = potential_sol
+    total = list(G.nodes)
+    li_dif = [i for i in total if i not in potential_sol['path']]
+    for node in li_dif:
+        if node in potential_sol['path']:
+            print("edge_cases responsible by Rui Chen in insert")
+            continue
+        temp = helper_add(G, potential_sol, node)
+        if temp['cost'] < optimal['cost']:
+            optimal = temp
+    return optimal
 
 
 
-def shake(G, potential_sol, phi):
+def shake(G, potential_sol, phi, phi_delta):
     """Input:
     G: graph
     potential_sol: dictionary, as defined in solve()
@@ -94,16 +103,20 @@ def shake(G, potential_sol, phi):
     Output:
     potential_sol: perturbed solution
     """
-    # potential_sol_final = deepcopy(potential_sol)
-    # for node in G\sol:
-    #   potential_sol_cp = deep_copy(potential_sol)
-    #   potential_sol_cp = add_node(potential_sol_cp, node)
-    #   # TODO add_node adds in the order that minimizes x_1 + x_2 - y
-    #   # (x_1,x_2 represents the distance to the node, y represents the distance between two vertexs in the existing circle)
-    #   if potential_sol_cp['cost'] < phi * potential_col['cost']:
-    #        potential_sol_final = add_node(potential_sol_final, node)
-    # return potential_sol_final
-    pass
+    potential_sol_final = deepcopy(potential_sol)
+    total = list(G.nodes)
+    li_dif = [i for i in total if i not in potential_sol['path']]
+    for node in li_dif:
+       potential_sol_cp = deepcopy(potential_sol)
+
+    #    add_node adds in the order that minimizes x_1 + x_2 - y
+    #    (x_1,x_2 represents the distance to the node, y represents the distance between two vertexs in the existing circle)
+
+       potential_sol_cp = helper_add(G, potential_sol_cp, node)
+       if potential_sol_cp['cost'] < (phi + 1) * potential_sol['cost']:
+            potential_sol_final = helper_add(G, potential_sol_final, node)
+    return potential_sol_final
+
 
 def verify_path(G, path, homes, start):
     assert len(path) > 0, "Nothing in path"
@@ -149,13 +162,13 @@ def solve(G, offers, start, homes, l=10, phi=0.35, phi_delta=0.01):
     while phi > 0:
         while True:
             potential_sol = l_consecutive_drop(potential_sol, l)
-            potentail_sol = insert(potential_sol)
+            potential_sol = insert(G, potential_sol)
             if potential_sol['cost'] < sol['cost']:
                 sol = potential_sol
             else:
                 break
+        shake(G, potential_sol, phi, phi_delta)
         phi -= phi_delta
-        shake(potential_sol)
     return sol
 
 def TSP(G, nodes):
