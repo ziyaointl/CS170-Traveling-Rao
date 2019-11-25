@@ -53,8 +53,7 @@ def helper_add(G, sol, node):
     cycle = sol['path'] #cycle is a list of integer
     assert node not in cycle, "node added must not in the cycle"
     new_list = cycle[:] + [node]
-    subgraph = G.subgraph(new_list)
-    solution = TSP(G)
+    solution = TSP(G, new_list)
     # assert len(cycle) >= 2, "current implementation cannot support minor edge case"
     """cost = sol['cost']
     curr_min = -G[cycle[0]][cycle[1]]['weight'] + G[cycle[0]][node]['weight'] + G[cycle[1]][node]['weight']
@@ -65,7 +64,10 @@ def helper_add(G, sol, node):
                 continue
             else:
                 s = -G[node_i][node_j]['weight'] + G[node_i][node]['weight'] + G[node_j][node]['weight']"""
-    pass
+    new_sol = deepcopy(sol)
+    new_sol['path'] = solution
+    new_sol['cost'] = calc_cost(G, )
+    return
 
 def insert(G, potential_sol):
     """Input:
@@ -161,6 +163,7 @@ def TSP(G, nodes):
     Input:
     G: networkx graph
     nodes: we want to find a cycle among these nodes
+    Function might be useful TODO subgraph = G.subgraph(nodes)
 
     Output:
     cycle: solution
