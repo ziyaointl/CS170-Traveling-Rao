@@ -27,6 +27,7 @@ def main(filename='50'):
     # f. Complete the graph using pair-wise shortest distances
     # g. Generate product prices using pair-wise shortest distances
     # h. Update all edges in G to 2/3
+    location_mapping, offers, G = preprocess(num_of_locations, num_houses, list_locations, list_houses, starting_car_location, adjacency_matrix)
 
     # 3. Solve
     res = solve(G, offers, start_car_location)
