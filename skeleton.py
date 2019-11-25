@@ -1,3 +1,15 @@
+import sys
+sys.path.append('..')
+sys.path.append('../..')
+import os
+import argparse
+import utils
+import networkx as nx
+import numpy as np
+from student_utils import *
+
+from collections import defaultdict
+
 def main(filename='50'):
     """Given a filename, genereate a solution, and save it to filename.out
     """
@@ -33,7 +45,29 @@ def l_consecutive_drop(G, potential_sol, l):
     potential_sol: possibly improved solution
     """
     while l > 0:
-        for i in range()
+        for i in range(l):
+            pass
+    pass
+
+def helper_add(G, sol, node):
+    cycle = sol['path'] #cycle is a list of integer
+    assert node not in cycle, "node added must not in the cycle"
+    new_list = cycle[:] + [node]
+    solution = TSP(G, new_list)
+    # assert len(cycle) >= 2, "current implementation cannot support minor edge case"
+    """cost = sol['cost']
+    curr_min = -G[cycle[0]][cycle[1]]['weight'] + G[cycle[0]][node]['weight'] + G[cycle[1]][node]['weight']
+    curr_cycle = cycle[:].insert(1, node)
+    for node_i in cycle:
+        for node_j in cycle:
+            if node_i == node_j:
+                continue
+            else:
+                s = -G[node_i][node_j]['weight'] + G[node_i][node]['weight'] + G[node_j][node]['weight']"""
+    new_sol = deepcopy(sol)
+    new_sol['path'] = solution
+    new_sol['cost'] = calc_cost(G, )
+    return
 
 def insert(G, potential_sol):
     """Input:
@@ -44,7 +78,12 @@ def insert(G, potential_sol):
     potential_sol: possibly imporved solution
     """
     # Add a new vertex to the current solution if such insertion implies a reduction in total cost
+    # the node that must maximize the reduction in cost!
+    for node in list(G.nodes):
+        pass
     pass
+
+
 
 def shake(G, potential_sol, phi):
     """Input:
@@ -66,8 +105,25 @@ def shake(G, potential_sol, phi):
     # return potential_sol_final
     pass
 
-def calc_cost(G, path, homes):
-    pass
+def verify_path(G, path, homes, start):
+    assert len(path) > 0, "Nothing in path"
+    assert path[0] == start and path[-1] == start, "First and last nodes have to start"
+
+def calc_cost(G, path, homes, offers):
+    """Input:
+    G: a complete graph
+    path: valid candidate path
+    homes: A list of homes
+    offers: Products offered at each market, Dictionary : {location -> {home -> price}}
+
+    Output:
+    res: a single integer, cost of the current path
+    """
+    cheapest_prices = defaultdict(lambda: float('inf'))
+    for l in path:
+        for h in homes:
+            cheapest_prices[h] = min(cheapest_prices[h], offers[l][h])
+    return sum([cheapest_prices[h] for h in homes])
 
 def solve(G, offers, start, homes, l=10, phi=0.35, phi_delta=0.01):
     """Input:
@@ -102,11 +158,12 @@ def solve(G, offers, start, homes, l=10, phi=0.35, phi_delta=0.01):
         shake(potential_sol)
     return sol
 
-def TSP(G, s):
+def TSP(G, nodes):
     """Returns an approximate TSP solution
     Input:
     G: networkx graph
-    s: start node
+    nodes: we want to find a cycle among these nodes
+    Function might be useful TODO subgraph = G.subgraph(nodes)
 
     Output:
     cycle: solution
