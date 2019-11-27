@@ -12,6 +12,14 @@ from concorde.tsp import TSPSolver
 from collections import defaultdict
 from preprocess import preprocess
 
+def superprint(*arg):
+    print('------------------------------')
+    print(*arg)
+    print('------------------------------')
+
+def print_graph(G):
+    print(' '.join([str(e) for e in G.edges()]))
+
 def TSP(G, nodes, start):
     """Returns an approximate TSP solution
     Input:
@@ -22,7 +30,7 @@ def TSP(G, nodes, start):
     Output:
     cycle: solution
     """
-
+    superprint('Calling TSP on', nodes, start)
     def gen_output(G, filename):
         """Input:
         G: graph
@@ -75,6 +83,7 @@ def TSP(G, nodes, start):
     for i in range(len(path)):
         if path[i] == start:
             path = path[i:] + path[:i] + [start]
+    superprint('TSP call finished', path)
     return path
 
 def main(filename='50'):
@@ -99,7 +108,7 @@ def main(filename='50'):
     res = solve(G, offers, location_mapping[starting_car_location], [location_mapping[h] for h in list_houses])
 
     # 4. Write to file
-
+    superprint('Final answer:', 'Cost:', res['cost'], '\n', 'Path:', res['path'])
 
 def deepcopy(sol):
     assert type(sol) == dict, "deepcopy only works for a solution (type dictionary)!"
@@ -283,4 +292,4 @@ def solve(G, offers, start, homes, l=10, phi=0.35, phi_delta=0.01):
     return sol
 
 if __name__ == '__main__':
-    main('test')
+    main('50')

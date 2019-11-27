@@ -60,6 +60,7 @@ def preprocess(num_of_locations, num_houses, list_locations, list_houses, starti
             local_prices[index_house] = G.edges[m, index_house]['weight']
         product_prices[m] = local_prices
 
+    import math
     # h. Update all edges in G to 2/3 & round to int
     for m in range(num_of_locations):
         for n in range(m + 1, num_of_locations):
