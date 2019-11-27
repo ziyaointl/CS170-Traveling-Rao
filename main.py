@@ -93,10 +93,10 @@ def main(filename='50'):
     print('offers', offers)
     print('shortest_paths', shortest_paths)
     print(nx.to_numpy_matrix(G))  
-    print('TSP', TSP(G, G.nodes(), location_mapping[starting_car_location]))
+    # print('TSP', TSP(G, G.nodes(), location_mapping[starting_car_location]))
     
     # 3. Solve
-    # res = solve(G, offers, location_mapping[starting_car_location])
+    res = solve(G, offers, location_mapping[starting_car_location], [location_mapping[h] for h in list_houses])
 
     # 4. Write to file
 
@@ -123,13 +123,14 @@ def l_drop(G, potential_sol, l, start_location, homes, offers):
     new_sol['cost'] = calc_cost(G, new_sol['path'], homes, offers) 
     return new_sol
 
-def l_consecutive_drop(G, potential_sol, l, homes, offers):
+def l_consecutive_drop(G, potential_sol, l, homes, offers, start):
     """Input:
     G: graph
     potential_sol: dictionary, as defined in solve()
     l: start value for l. 1 <= l < len(potential_sol['path'])
     homes: A list of homes
     offers: Products offered at each market, Dictionary : {location -> {home -> price}}
+    start: start node, Integer
 
     Output:
     potential_sol: possibly improved solution
@@ -139,7 +140,7 @@ def l_consecutive_drop(G, potential_sol, l, homes, offers):
         path = potential_sol['path']
         # Find the largest cost improvement drop
         for i in range(1, len(path)):
-            new_sol = l_drop(G, potential_sol, l, start_node)
+            new_sol = l_drop(G, potential_sol, l, start, homes, offers)
             if (final_sol['cost'] > new_sol['cost']):
                 final_sol = new_sol
         # If cost did not decrease after drop, decrease l
@@ -151,11 +152,11 @@ def l_consecutive_drop(G, potential_sol, l, homes, offers):
     return final_sol
 
 
-def helper_add(G, sol, node, homes, offers):
+def helper_add(G, sol, node, homes, offers, start):
     cycle = sol['path']  # cycle is a list of integer
     assert node not in cycle, "node added must not in the cycle"
     new_list = cycle[:] + [node]
-    solution = TSP(G, new_list)
+    tsp_path = TSP(G, new_list, start)
     # assert len(cycle) >= 2, "current implementation cannot support minor edge case"
     """cost = sol['cost']
     curr_min = -G[cycle[0]][cycle[1]]['weight'] + G[cycle[0]][node]['weight'] + G[cycle[1]][node]['weight']
@@ -167,15 +168,18 @@ def helper_add(G, sol, node, homes, offers):
             else:
                 s = -G[node_i][node_j]['weight'] + G[node_i][node]['weight'] + G[node_j][node]['weight']"""
     new_sol = {}
-    new_sol['path'] = solution
-    new_sol['cost'] = calc_cost(G, solution, homes, offers)
+    new_sol['path'] = tsp_path
+    new_sol['cost'] = calc_cost(G, tsp_path, homes, offers)
     return new_sol
 
 
-def insert(G, potential_sol, homes, offers):
+def insert(G, potential_sol, homes, offers, start):
     """Input:
     G: graph
     potential_sol: dictionary, as defined in solve()
+    homes: list of homes
+    offers: list of offers
+    start: start node
 
     Output:
     potential_sol: possibly improved solution
@@ -189,13 +193,13 @@ def insert(G, potential_sol, homes, offers):
         if node in potential_sol['path']:
             print("edge_cases responsible by Rui Chen in insert")
             continue
-        temp = helper_add(G, potential_sol, node, homes, offers)
+        temp = helper_add(G, potential_sol, node, homes, offers, start)
         if temp['cost'] < optimal['cost']:
             optimal = temp
     return optimal
 
 
-def shake(G, potential_sol, phi, homes, offers):
+def shake(G, potential_sol, phi, homes, offers, start):
     """Input:
     G: graph
     potential_sol: dictionary, as defined in solve()
@@ -213,9 +217,9 @@ def shake(G, potential_sol, phi, homes, offers):
         #    add_node adds in the order that minimizes x_1 + x_2 - y
         #    (x_1,x_2 represents the distance to the node, y represents the distance between two vertexs in the existing circle)
 
-        potential_sol_cp = helper_add(G, potential_sol_cp, node, homes, offers)
+        potential_sol_cp = helper_add(G, potential_sol_cp, node, homes, offers, start)
         if potential_sol_cp['cost'] < (phi + 1) * potential_sol['cost']:
-            potential_sol_final = helper_add(G, potential_sol_final, node, homes, offers)
+            potential_sol_final = helper_add(G, potential_sol_final, node, homes, offers, start)
     return potential_sol_final
 
 
@@ -261,22 +265,22 @@ def solve(G, offers, start, homes, l=10, phi=0.35, phi_delta=0.01):
     """
     # A dictionary of solution info
     sol = {
-        'path': TSP(G, homes + [start])
+        'path': TSP(G, G.nodes(), start)
     }
     sol['cost'] = calc_cost(G, sol['path'],
-                            homes)  # TODO: Write calc_cost, with reference to a similar function in student_utils.py
+                            homes, offers)
     potential_sol = deepcopy(sol)  # TODO: Implement deepcopy
     while phi > 0:
         while True:
-            potential_sol = l_consecutive_drop(G, potential_sol, l, homes, offers) 
-            potential_sol = insert(G, potential_sol)
+            potential_sol = l_consecutive_drop(G, potential_sol, l, homes, offers, start) 
+            potential_sol = insert(G, potential_sol, homes, offers, start)
             if potential_sol['cost'] < sol['cost']:
                 sol = potential_sol
             else:
                 break
-        shake(G, potential_sol, phi, homes, offers)
+        shake(G, potential_sol, phi, homes, offers, start)
         phi -= phi_delta
     return sol
 
 if __name__ == '__main__':
-    main('200')
+    main('test')
