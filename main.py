@@ -86,6 +86,12 @@ def TSP(G, nodes, start):
     superprint('TSP call finished', path)
     return path
 
+def get_input_path(filename):
+    return 'inputs/' + filename + '.in'
+
+def get_output_path(filename):
+    return 'outputs/' + filename + '.out'
+
 def main(filename='50'):
     """Given a filename, genereate a solution, and save it to filename.out
     """
@@ -108,7 +114,37 @@ def main(filename='50'):
     res = solve(G, offers, location_mapping[starting_car_location], [location_mapping[h] for h in list_houses])
 
     # 4. Write to file
+    fout = open(get_output_path(filename), 'w')
+    for location in res['path']:
+        fout.write(list_locations[location] + ' ')
+    dropoffs = get_dropoffs(G, res, [location_mapping[h] for h in list_houses], offers)
+    dropoffs = [[list_locations[location] for location in lst] for lst in dropoffs]
+    fout.write('\n' + str(len(dropoffs)) + '\n')
+    fout.write('\n'.join([' '.join(lst) for lst in dropoffs]) + '\n')
     superprint('Final answer:', 'Cost:', res['cost'], '\n', 'Path:', res['path'])
+    fout.close()
+
+def get_dropoffs(G, sol, homes, offers):
+    """Input:
+    G: graph
+    sol: dictionary, as defined in solve()
+    homes: list of homes
+    offers: dictionary {location -> {home -> price}}
+
+    Output:
+    res: list of locations to be printed
+    """
+    prices = defaultdict(lambda: float('inf')) # maps home to the cheapest dropoff price
+    dropoffs = {} # maps home to the closest dropoff locations
+    res = defaultdict(list)
+    for location in sol['path']:
+        for home in homes:
+            if prices[home] > offers[location][home]:
+                dropoffs[home] = location
+                prices[home] = offers[location][home]
+    for home in dropoffs:
+        res[dropoffs[home]].append(home)
+    return [[location] + res[location] for location in res]
 
 def deepcopy(sol):
     assert type(sol) == dict, "deepcopy only works for a solution (type dictionary)!"
