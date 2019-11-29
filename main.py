@@ -115,6 +115,14 @@ def main(filename='50'):
 
     # 4. Write to file
     fout = open(get_output_path(filename), 'w')
+    # Reconstruct the path
+    path = res['path']
+    new_path = [path[0]]
+    for i in range(1, len(path)):
+        print(new_path)
+        new_path[-1:] = shortest_paths[path[i-1]][path[i]]
+    res['path'] = new_path
+    # Write to file
     for location in res['path']:
         fout.write(list_locations[location] + ' ')
     dropoffs = get_dropoffs(G, res, [location_mapping[h] for h in list_houses], offers)
@@ -184,8 +192,8 @@ def l_consecutive_drop(G, potential_sol, l, homes, offers, start):
     while l > 0:
         path = potential_sol['path']
         # Find the largest cost improvement drop
-        for i in range(1, len(path)):
-            new_sol = l_drop(G, potential_sol, l, start, homes, offers)
+        for i in range(1, len(path) - l):
+            new_sol = l_drop(G, potential_sol, l, i, homes, offers)
             if (final_sol['cost'] > new_sol['cost']):
                 final_sol = new_sol
         # If cost did not decrease after drop, decrease l
@@ -318,12 +326,15 @@ def solve(G, offers, start, homes, l=10, phi=0.35, phi_delta=0.01):
     while phi > 0:
         while True:
             potential_sol = l_consecutive_drop(G, potential_sol, l, homes, offers, start) 
+            verify_path(G, potential_sol['path'], homes, start)
             potential_sol = insert(G, potential_sol, homes, offers, start)
+            verify_path(G, potential_sol['path'], homes, start)
             if potential_sol['cost'] < sol['cost']:
                 sol = potential_sol
             else:
                 break
-        shake(G, potential_sol, phi, homes, offers, start)
+        potential_sol = shake(G, potential_sol, phi, homes, offers, start)
+        verify_path(G, potential_sol['path'], homes, start)
         phi -= phi_delta
     return sol
 
