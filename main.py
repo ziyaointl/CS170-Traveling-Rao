@@ -107,9 +107,9 @@ def main(filename='50'):
     print('locations', location_mapping)
     print('offers', offers)
     print('shortest_paths', shortest_paths)
-    print(nx.to_numpy_matrix(G))  
+    print(nx.to_numpy_matrix(G))
     # print('TSP', TSP(G, G.nodes(), location_mapping[starting_car_location]))
-    
+
     # 3. Solve
     res = solve(G, offers, location_mapping[starting_car_location], [location_mapping[h] for h in list_houses])
 
@@ -119,7 +119,6 @@ def main(filename='50'):
     path = res['path']
     new_path = [path[0]]
     for i in range(1, len(path)):
-        print(new_path)
         new_path[-1:] = shortest_paths[path[i-1]][path[i]]
     res['path'] = new_path
     # Write to file
@@ -173,7 +172,7 @@ def l_drop(G, potential_sol, l, start_location, homes, offers):
     """
     new_sol = deepcopy(potential_sol)
     new_sol['path'] = new_sol['path'][:start_location] + new_sol['path'][start_location+l:]
-    new_sol['cost'] = calc_cost(G, new_sol['path'], homes, offers) 
+    new_sol['cost'] = calc_cost(G, new_sol['path'], homes, offers)
     return new_sol
 
 def l_consecutive_drop(G, potential_sol, l, homes, offers, start):
@@ -322,10 +321,10 @@ def solve(G, offers, start, homes, l=10, phi=0.35, phi_delta=0.01):
     }
     sol['cost'] = calc_cost(G, sol['path'],
                             homes, offers)
-    potential_sol = deepcopy(sol)  # TODO: Implement deepcopy
+    potential_sol = deepcopy(sol)
     while phi > 0:
         while True:
-            potential_sol = l_consecutive_drop(G, potential_sol, l, homes, offers, start) 
+            potential_sol = l_consecutive_drop(G, potential_sol, l, homes, offers, start)
             verify_path(G, potential_sol['path'], homes, start)
             potential_sol = insert(G, potential_sol, homes, offers, start)
             verify_path(G, potential_sol['path'], homes, start)
