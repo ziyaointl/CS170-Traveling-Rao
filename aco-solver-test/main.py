@@ -2,7 +2,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 INF = 999999999
-SCALE = 1000
+SCALE = 10000
 
 def show_graph(G):
     print(G.edges())
@@ -28,7 +28,7 @@ def tpp_reduce(input, output):
         l = next(fin).strip().split(' ')
         for j in range(i + 1, len(locations)):
             if l[j - 1] != 'x':
-                G.add_edge(i, j, weight=int(l[j - 1]))
+                G.add_edge(i, j, weight=float(l[j - 1]))
     fin.close()
     dists = nx.floyd_warshall(G)
     # Change all weights to 2/3 of original
@@ -41,8 +41,9 @@ def tpp_reduce(input, output):
     data = {'NAME': input,
             'HOMES': homes,
             'LOCATIONS': locations,
-            'OFFERS': [[]] + [[(j + 1, dists[i][locations_inv[homes[j]]] * SCALE, 1) for j in range(len(homes))] for i in range(1, len(locations))], # home number, dist to home, quantity
-            'G': G}
+            'OFFERS': [[]] + [[(j + 1, int(dists[i][locations_inv[homes[j]]] * SCALE), 1) for j in range(len(homes))] for i in range(1, len(locations))], # home number, dist to home, quantity
+            'G': G,
+            'SHORTEST_PATHS': dists}
     return data
 
 def gen_output(data, filename):
@@ -65,7 +66,7 @@ def gen_output(data, filename):
             if n in neighbors:
                 line.append(str(G[v][n]['weight']))
             else:
-                line.append(str(INF))
+                line.append(str(int(data['SHORTEST_PATHS'][v][n] * SCALE * 2/3)))
         lines.append(' '.join(line))
     fout.write('\n'.join(lines))
 
@@ -84,5 +85,5 @@ def gen_output(data, filename):
     fout.write('EOF\n')
     fout.close()
 
-data = tpp_reduce('sample.in', 'sample.out')
-gen_output(data, 'sample.out')
+data = tpp_reduce('../inputs/200.in', '200.tpp')
+gen_output(data, '200.tpp')
