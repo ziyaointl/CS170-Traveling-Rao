@@ -1,6 +1,7 @@
 import sys
 sys.path.append('..')
 sys.path.append('../..')
+import time
 import os
 import argparse
 import utils
@@ -20,7 +21,7 @@ def superprint(*arg):
 def print_graph(G):
     print(' '.join([str(e) for e in G.edges()]))
 
-def TSP(G, nodes, start):
+def TSP(G, nodes, start, name):
     """Returns an approximate TSP solution
     Input:
     G: networkx graph
@@ -69,8 +70,8 @@ def TSP(G, nodes, start):
         return sorted_nodes.index(node)
 
     # Create data
-    filename = "test.tsp"
-    gen_output(G, "test.tsp")
+    filename = name + ".tsp"
+    gen_output(G, filename)
 
     # Call Concorde
     solver = TSPSolver.from_tspfile(filename)
@@ -99,7 +100,7 @@ def main(filename='50'):
     input_data = utils.read_file('inputs/' + str(filename) + '.in')
     num_of_locations, num_houses, list_locations, list_houses, starting_car_location, adjacency_matrix = data_parser(
         input_data)
-    SCALE = 100000
+    SCALE = 10000
 
     # 2. Preprocess adjacency matrix
     G, location_mapping, offers, shortest_paths = preprocess(num_of_locations, num_houses, list_locations, list_houses,
@@ -111,9 +112,9 @@ def main(filename='50'):
     # print('TSP', TSP(G, G.nodes(), location_mapping[starting_car_location]))
 
     # 3. Solve
-    res = solve(G, offers, location_mapping[starting_car_location], [location_mapping[h] for h in list_houses])
+    res = solve(G, offers, location_mapping[starting_car_location], [location_mapping[h] for h in list_houses], filename)
 
-    # 4. Write to file
+    # 4. Write to fil
     fout = open(get_output_path(filename), 'w')
     # Reconstruct the path
     path = res['path']
@@ -204,11 +205,11 @@ def l_consecutive_drop(G, potential_sol, l, homes, offers, start):
     return final_sol
 
 
-def helper_add(G, sol, node, homes, offers, start):
+def helper_add(G, sol, node, homes, offers, start, name):
     cycle = sol['path']  # cycle is a list of integer
     assert node not in cycle, "node added must not in the cycle"
     new_list = cycle[:] + [node]
-    tsp_path = TSP(G, new_list, start)
+    tsp_path = TSP(G, new_list, start, name)
     # assert len(cycle) >= 2, "current implementation cannot support minor edge case"
     """cost = sol['cost']
     curr_min = -G[cycle[0]][cycle[1]]['weight'] + G[cycle[0]][node]['weight'] + G[cycle[1]][node]['weight']
@@ -225,7 +226,7 @@ def helper_add(G, sol, node, homes, offers, start):
     return new_sol
 
 
-def insert(G, potential_sol, homes, offers, start):
+def insert(G, potential_sol, homes, offers, start, name):
     """Input:
     G: graph
     potential_sol: dictionary, as defined in solve()
@@ -245,13 +246,13 @@ def insert(G, potential_sol, homes, offers, start):
         if node in potential_sol['path']:
             print("edge_cases responsible by Rui Chen in insert")
             continue
-        temp = helper_add(G, potential_sol, node, homes, offers, start)
+        temp = helper_add(G, potential_sol, node, homes, offers, start, name)
         if temp['cost'] < optimal['cost']:
             optimal = temp
     return optimal
 
 
-def shake(G, potential_sol, phi, homes, offers, start):
+def shake(G, potential_sol, phi, homes, offers, start, name):
     """Input:
     G: graph
     potential_sol: dictionary, as defined in solve()
@@ -269,9 +270,9 @@ def shake(G, potential_sol, phi, homes, offers, start):
         #    add_node adds in the order that minimizes x_1 + x_2 - y
         #    (x_1,x_2 represents the distance to the node, y represents the distance between two vertexs in the existing circle)
 
-        potential_sol_cp = helper_add(G, potential_sol_cp, node, homes, offers, start)
+        potential_sol_cp = helper_add(G, potential_sol_cp, node, homes, offers, start, name)
         if potential_sol_cp['cost'] < (phi + 1) * potential_sol['cost']:
-            potential_sol_final = helper_add(G, potential_sol_final, node, homes, offers, start)
+            potential_sol_final = helper_add(G, potential_sol_final, node, homes, offers, start, name)
     return potential_sol_final
 
 
@@ -300,7 +301,7 @@ def calc_cost(G, path, homes, offers):
     return sum([cheapest_prices[h] for h in homes]) + travel_cost
 
 
-def solve(G, offers, start, homes, l=10, phi=0.35, phi_delta=0.01):
+def solve(G, offers, start, homes, name, l=1, phi=0.35, phi_delta=0.01):
     """Input:
     G: Complete graph
     offers: Products offered at each market, Dictionary : {location -> {home -> price}}
@@ -317,25 +318,39 @@ def solve(G, offers, start, homes, l=10, phi=0.35, phi_delta=0.01):
     """
     # A dictionary of solution info
     sol = {
-        'path': TSP(G, G.nodes(), start)
+        'path': TSP(G, G.nodes(), start, name)
     }
     sol['cost'] = calc_cost(G, sol['path'],
                             homes, offers)
     potential_sol = deepcopy(sol)
     while phi > 0:
         while True:
-            potential_sol = l_consecutive_drop(G, potential_sol, l, homes, offers, start)
+            potential_sol = l_consecutive_drop(G, potential_sol, l, homes, offers, start) 
             verify_path(G, potential_sol['path'], homes, start)
-            potential_sol = insert(G, potential_sol, homes, offers, start)
+            potential_sol = insert(G, potential_sol, homes, offers, start, name)
             verify_path(G, potential_sol['path'], homes, start)
             if potential_sol['cost'] < sol['cost']:
                 sol = potential_sol
             else:
                 break
-        potential_sol = shake(G, potential_sol, phi, homes, offers, start)
+        potential_sol = shake(G, potential_sol, phi, homes, offers, start, name)
         verify_path(G, potential_sol['path'], homes, start)
         phi -= phi_delta
     return sol
 
 if __name__ == '__main__':
-    main('50')
+    main('1_50')
+    # TODO: Automatic task discovery
+    # TODO: Automatic completion detection
+    # TODO: Adaptive graph weight handling
+    # TODO: Error handling
+    #from dask.distributed import Client, LocalCluster
+    #cluster = LocalCluster()
+    #client = Client(cluster)
+    #tasks = [str(i) + '_50' for i in range(1, 8)]
+    #futures = []
+    #for t in tasks:
+    #    future = client.submit(main, t)
+    #    futures.append(future)
+    #ans = [f.result() for f in futures]
+
