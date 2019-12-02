@@ -50,7 +50,20 @@ def preprocess(num_of_locations, num_houses, list_locations, list_houses, starti
             if not G.has_edge(m, n):
                 G.add_edge(m, n)
             G.edges[m, n]['weight'] = shortest_paths_len[m][n]
-
+    # TODO Noticement! Prune and Modify Edge Weights to Satisfy TSP solver
+    #0.save a copy of G for other purpose
+    #TODO
+    #1.find max_pairwise_distance
+    max_dis = G.edges[0, 0]['weight']
+    for m in range(num_of_locations):
+        for n in range(m, num_of_locations):
+            if G.edges[m, n]['weight'] > max_dis:
+                max_dis = G.edges[m, n]['weight']
+    #2. rescale edges based on max_dis
+    upper_bound = 2**29 - 1
+    for m in range(num_of_locations):
+        for n in range(m, num_of_locations):
+            G.edges[m, n]['weight'] =  int((G.edges[m, n]['weight'] / max_dis) * upper_bound)
     # g. Generate product prices using pair-wise shortest distances
     product_prices = {}
     for m in range(num_of_locations):
