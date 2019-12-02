@@ -60,7 +60,7 @@ def preprocess(num_of_locations, num_houses, list_locations, list_houses, starti
             if G.edges[m, n]['weight'] > max_dis:
                 max_dis = G.edges[m, n]['weight']
     #2. rescale edges based on max_dis
-    upper_bound = 2**27 - 1
+    upper_bound = 2**26 - 1
     ratio = 10**5
     if ratio > (upper_bound / max_dis):
         ratio = upper_bound / max_dis
