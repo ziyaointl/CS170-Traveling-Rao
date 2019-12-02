@@ -345,6 +345,7 @@ if __name__ == '__main__':
     # TODO: Adaptive graph weight handling
     # TODO: Error handling
     # TODO: Kubernetes
+    # TODO: Google TSP and spindly graph test
     #from dask.distributed import Client, LocalCluster
     #cluster = LocalCluster()
     #client = Client(cluster)
