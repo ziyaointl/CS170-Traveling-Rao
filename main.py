@@ -301,7 +301,7 @@ def calc_cost(G, path, homes, offers):
     return sum([cheapest_prices[h] for h in homes]) + travel_cost
 
 
-def solve(G, offers, start, homes, name, l=1, phi=0.35, phi_delta=0.01):
+def solve(G, offers, start, homes, name, l=10, phi=0.35, phi_delta=0.01):
     """Input:
     G: Complete graph
     offers: Products offered at each market, Dictionary : {location -> {home -> price}}
