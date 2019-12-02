@@ -14,7 +14,7 @@ def preprocess(num_of_locations, num_houses, list_locations, list_houses, starti
     shortest_paths: shortest paths found from the original adjacency matrix, Dictionary: { node1 -> { node2 -> [shortest_path] } }
     """
     # a. Scale all weights by scale
-    adjacency_matrix = [[int(w*scale) if w != 'x' else w for w in row] for row in adjacency_matrix]
+    #adjacency_matrix = [[int(w*scale) if w != 'x' else w for w in row] for row in adjacency_matrix]
 
     # b. Generate a mapping from locations to node index in a hashmap
     map_locations = {}
@@ -60,10 +60,13 @@ def preprocess(num_of_locations, num_houses, list_locations, list_houses, starti
             if G.edges[m, n]['weight'] > max_dis:
                 max_dis = G.edges[m, n]['weight']
     #2. rescale edges based on max_dis
-    upper_bound = 2**29 - 1
+    upper_bound = 2**27 - 1
+    ratio = 10**5
+    if ratio > (upper_bound / max_dis):
+        ratio = upper_bound / max_dis
     for m in range(num_of_locations):
         for n in range(m, num_of_locations):
-            G.edges[m, n]['weight'] =  int((G.edges[m, n]['weight'] / max_dis) * upper_bound)
+            G.edges[m, n]['weight'] =  int(G.edges[m, n]['weight'] * ratio)
     # g. Generate product prices using pair-wise shortest distances
     product_prices = {}
     for m in range(num_of_locations):
