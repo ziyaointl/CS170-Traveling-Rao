@@ -344,6 +344,7 @@ if __name__ == '__main__':
     # TODO: Automatic completion detection
     # TODO: Adaptive graph weight handling
     # TODO: Error handling
+    # TODO: Kubernetes
     #from dask.distributed import Client, LocalCluster
     #cluster = LocalCluster()
     #client = Client(cluster)
