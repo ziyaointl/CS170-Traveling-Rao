@@ -125,18 +125,19 @@ def TSP(G, nodes, start, name):
         l = len(nodes)
         nodes_cp = nodes[:]
         nodes_cp.remove(start)
-        if l == 2:
+        if l == 2 or l == 3:
             return [start] + nodes_cp + [start]
-        elif l == 3:
-            sol1 = [start] + nodes_cp + [start]
-            sol2 = sol1[:]
-            sol2.reverse()
-            if cal_TSP_cost(G, start, sol1) > cal_TSP_cost(G, start, sol2):
-                return sol2
-            else:
-                return sol1
         elif l == 4:
-            return Google_inefficient_TSP(G,nodes,start,name)
+            a,b,c = nodes_cp[0], nodes_cp[1], nodes_cp[2]
+            sol1 = [start] + nodes_cp + [start]
+            sol2 = [start, a, c, b, start]
+            sol3 = [start, b, a, c, start]
+            sol4 = [start, b ,c ,a, start]
+            sol5 = [start, c, a, b, start]
+            sol6 = [start, c, b, a, start]
+            #3 of them are over calculated 
+            return min([sol1,sol2,sol3,sol4,sol5,sol6], key= lambda x:cal_TSP_cost(G,start,x))
+            #return Google_inefficient_TSP(G,nodes,start,name)
         else:
             print("incorrect parameter for naive TSP")
 
