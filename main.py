@@ -4,14 +4,230 @@ sys.path.append('../..')
 import time
 import os
 import argparse
-import utils
 import copy as cp
 import networkx as nx
 import numpy as np
-from student_utils import *
+import io
 from concorde.tsp import TSPSolver
 from collections import defaultdict
-from preprocess import preprocess
+from glob import iglob
+
+def get_files_with_extension(directory, extension):
+    files = []
+    for name in os.listdir(directory):
+        if name.endswith(extension):
+            files.append('{}/{}'.format(directory, name))
+    return files
+
+
+def read_file(file):
+    with open(file, 'r') as f:
+        data = f.readlines()
+    data = [line.replace("Â", " ").strip().split() for line in data]
+    return data
+
+
+def write_to_file(file, string, append=False):
+    if append:
+        mode = 'a'
+    else:
+        mode = 'w'
+    with open(file, mode) as f:
+        f.write(string)
+
+
+def write_data_to_file(file, data, separator, append=False):
+    if append:
+        mode = 'a'
+    else:
+        mode = 'w'
+    with open(file, mode) as f:
+        for item in data:
+            f.write('{}/{}'.format(item, separator))
+
+
+def input_to_output(input_file, output_directory):
+    return (
+        os.path.join(output_directory, os.path.basename(input_file))
+        .replace("input", "output")
+        .replace(".in", ".out")
+    )
+
+def decimal_digits_check(number):
+    number = str(number)
+    parts = number.split('.')
+    if len(parts) == 1:
+        return True
+    else:
+        return len(parts[1]) <= 5
+
+
+def data_parser(input_data):
+    number_of_locations = int(input_data[0][0])
+    number_of_houses = int(input_data[1][0])
+    list_of_locations = input_data[2]
+    list_of_houses = input_data[3]
+    starting_location = input_data[4][0]
+
+    adjacency_matrix = [[entry if entry == 'x' else float(entry) for entry in row] for row in input_data[5:]]
+    return number_of_locations, number_of_houses, list_of_locations, list_of_houses, starting_location, adjacency_matrix
+
+
+def adjacency_matrix_to_graph(adjacency_matrix):
+    node_weights = [adjacency_matrix[i][i] for i in range(len(adjacency_matrix))]
+    adjacency_matrix_formatted = [[0 if entry == 'x' else entry for entry in row] for row in adjacency_matrix]
+
+    for i in range(len(adjacency_matrix_formatted)):
+        adjacency_matrix_formatted[i][i] = 0
+
+    G = nx.convert_matrix.from_numpy_matrix(np.matrix(adjacency_matrix_formatted))
+
+    message = ''
+
+    for node, datadict in G.nodes.items():
+        if node_weights[node] != 'x':
+            message += 'The location {} has a road to itself. This is not allowed.\n'.format(node)
+        datadict['weight'] = node_weights[node]
+
+    return G, message
+
+
+def is_metric(G):
+    shortest = dict(nx.floyd_warshall(G))
+    for u, v, datadict in G.edges(data=True):
+        if abs(shortest[u][v] - datadict['weight']) >= 0.00001:
+            return False
+    return True
+
+
+def adjacency_matrix_to_edge_list(adjacency_matrix):
+    edge_list = []
+    for i in range(len(adjacency_matrix)):
+        for j in range(len(adjacency_matrix[0])):
+            if adjacency_matrix[i][j] == 1:
+                edge_list.append((i, j))
+    return edge_list
+
+
+def is_valid_walk(G, closed_walk):
+    if len(closed_walk) == 2:
+        return closed_walk[0] == closed_walk[1]
+    return all([(closed_walk[i], closed_walk[i+1]) in G.edges for i in range(len(closed_walk) - 1)])
+
+
+def get_edges_from_path(path):
+    return [(path[i], path[i+1]) for i in range(len(path) - 1)]
+
+"""
+G is the adjacency matrix.
+car_cycle is the cycle of the car in terms of indices.
+dropoff_mapping is a dictionary of dropoff location to list of TAs that got off at said droppoff location
+in terms of indices.
+"""
+def cost_of_solution(G, car_cycle, dropoff_mapping):
+    cost = 0
+    message = ''
+    dropoffs = dropoff_mapping.keys()
+    if not is_valid_walk(G, car_cycle):
+        message += 'This is not a valid walk for the given graph.\n'
+        cost = 'infinite'
+
+    if not car_cycle[0] == car_cycle[-1]:
+        message += 'The start and end vertices are not the same.\n'
+        cost = 'infinite'
+    if cost != 'infinite':
+        if len(car_cycle) == 1:
+            car_cycle = []
+        else:
+            car_cycle = get_edges_from_path(car_cycle[:-1]) + [(car_cycle[-2], car_cycle[-1])]
+        if len(car_cycle) != 1:
+            driving_cost = sum([G.edges[e]['weight'] for e in car_cycle]) * 2 / 3
+        else:
+            driving_cost = 0
+        walking_cost = 0
+        shortest = dict(nx.floyd_warshall(G))
+
+        for drop_location in dropoffs:
+            for house in dropoff_mapping[drop_location]:
+                walking_cost += shortest[drop_location][house]
+
+def preprocess(num_of_locations, num_houses, list_locations, list_houses, starting_car_location, adjacency_matrix):
+    """
+    Preprocess adjacency matrix
+
+    Output:
+    G: networkx graph,
+    map_locations: mapping from locations to index { String -> Integer },
+    product_prices: { location_index -> {house_index -> price} },
+    shortest_paths: shortest paths found from the original adjacency matrix, Dictionary: { node1 -> { node2 -> [shortest_path] } }
+    """
+
+    # b. Generate a mapping from locations to node index in a hashmap
+    map_locations = {}
+    index = 0
+    for location in list_locations:
+        map_locations[location] = index
+        index += 1
+
+    # c. Put adjacency matrix in networkx
+    G = nx.Graph()
+    for i in range(num_of_locations):
+        G.add_node(i)
+    for j in range(len(adjacency_matrix)):
+        for k in range(j, len(adjacency_matrix[0])):
+            if (j == k):
+                G.add_edge(j, k)
+                G.edges[j, k]['weight'] = 0
+            else:
+                weight = adjacency_matrix[j][k]
+                if weight != 'x':
+                    G.add_edge(j, k)
+                    G.edges[j, k]['weight'] = weight
+
+    # d. Run networkx all_pairs_shortest_path
+    shortest_paths = dict(nx.all_pairs_dijkstra_path(G))
+
+    # e. Run floyd-warshall to get all pair-wise shortest distances 
+    shortest_paths_len = nx.floyd_warshall(G)
+
+    # f. Complete the graph using pair-wise shortest distances
+    for m in range(num_of_locations):
+        for n in range(m, num_of_locations):
+            if not G.has_edge(m, n):
+                G.add_edge(m, n)
+            G.edges[m, n]['weight'] = shortest_paths_len[m][n]
+    # TODO Noticement! Prune and Modify Edge Weights to Satisfy TSP solver
+    #0.save a copy of G for other purpose
+    #TODO
+    #1.find max_pairwise_distance
+    max_dis = G.edges[0, 0]['weight']
+    for m in range(num_of_locations):
+        for n in range(m, num_of_locations):
+            if G.edges[m, n]['weight'] > max_dis:
+                max_dis = G.edges[m, n]['weight']
+    #2. rescale edges based on max_dis
+    upper_bound = 2**26 - 1
+    ratio = 10**5
+    if ratio > (upper_bound / max_dis):
+        ratio = upper_bound / max_dis
+    for m in range(num_of_locations):
+        for n in range(m, num_of_locations):
+            G.edges[m, n]['weight'] =  int(G.edges[m, n]['weight'] * ratio)
+    # g. Generate product prices using pair-wise shortest distances
+    product_prices = {}
+    for m in range(num_of_locations):
+        local_prices = {}
+        for n in range(num_houses):
+            index_house = map_locations[list_houses[n]]
+            local_prices[index_house] = G.edges[m, index_house]['weight']
+        product_prices[m] = local_prices
+
+    # h. Update all edges in G to 2/3 & round to int
+    for m in range(num_of_locations):
+        for n in range(m + 1, num_of_locations):
+            G.edges[m, n]['weight'] = int(G[m][n]['weight'] * 2/3)
+
+    return G, map_locations, product_prices, shortest_paths
 
 
 def superprint(*arg):
@@ -127,18 +343,16 @@ def get_input_path(filename):
 def get_output_path(filename):
     return 'outputs/' + filename + '.out'
 
-def main(filename='50'):
+def main(input_data, filename):
     """Given a filename, genereate a solution, and save it to filename.out
     """
     # 1. Read input
-    input_data = utils.read_file('inputs/' + str(filename) + '.in')
     num_of_locations, num_houses, list_locations, list_houses, starting_car_location, adjacency_matrix = data_parser(
         input_data)
-    SCALE = 10000
 
     # 2. Preprocess adjacency matrix
     G, location_mapping, offers, shortest_paths = preprocess(num_of_locations, num_houses, list_locations, list_houses,
-                                             starting_car_location, adjacency_matrix, SCALE)
+                                             starting_car_location, adjacency_matrix)
     print('locations', location_mapping)
     print('offers', offers)
     print('shortest_paths', shortest_paths)
@@ -148,8 +362,8 @@ def main(filename='50'):
     # 3. Solve
     res = solve(G, offers, location_mapping[starting_car_location], [location_mapping[h] for h in list_houses], filename)
 
-    # 4. Write to fil
-    fout = open(get_output_path(filename), 'w')
+    # 4. Write to file
+    fout = io.StringIO()
     # Reconstruct the path
     path = res['path']
     new_path = [path[0]]
@@ -164,7 +378,7 @@ def main(filename='50'):
     fout.write('\n' + str(len(dropoffs)) + '\n')
     fout.write('\n'.join([' '.join(lst) for lst in dropoffs]) + '\n')
     superprint('Final answer:', 'Cost:', res['cost'], '\n', 'Path:', res['path'])
-    fout.close()
+    return fout.getvalue()
 
 def get_dropoffs(G, sol, homes, offers):
     """Input:
@@ -372,21 +586,47 @@ def solve(G, offers, start, homes, name, l=10, phi=0.35, phi_delta=0.01):
         phi -= phi_delta
     return sol
 
+def get_all_inputs():
+    res = []
+    for i in iglob('inputs/*'):
+        res.append(i)
+    return sorted(res)
+
 if __name__ == '__main__':
-    main('1_50')
+    #main('1_50')
     # TODO: Automatic task discovery
     # TODO: Automatic completion detection
     # TODO: Adaptive graph weight handling
     # TODO: Error handling
     # TODO: Kubernetes
     # TODO: Google TSP and spindly graph test
-    #from dask.distributed import Client, LocalCluster
-    #cluster = LocalCluster()
-    #client = Client(cluster)
-    #tasks = [str(i) + '_50' for i in range(1, 8)]
-    #futures = []
-    #for t in tasks:
-    #    future = client.submit(main, t)
-    #    futures.append(future)
-    #ans = [f.result() for f in futures]
-
+    from dask.distributed import Client
+    import traceback
+    all_inputs = get_all_inputs()
+    client = Client("tcp://34.82.71.216:8786")
+    tasks = all_inputs[:50]
+    done_tasks = set()
+    futures = []
+    for t in tasks:
+        future = client.submit(main, read_file(t), t.split('/')[1])
+        futures.append(future)
+    while len(done_tasks) < len(futures):
+        for i in range(len(futures)):
+            f = futures[i]
+            t = tasks[i]
+            if t not in done_tasks and f.done():
+                done_tasks.add(t)
+                try:
+                    res = futures[i].result(5)
+                    fout = open('outputs/' + tasks[i].split('/')[1], 'w')
+                    fout.write(res)
+                    print('Wrote', tasks[i])
+                    fout.close()
+                except TimeoutError:
+                    print('Could not gather result {}, retrying...'.format(t))
+                    done_tasks.remove(t)
+                except Exception:
+                    print(tasks[i], 'failed')
+                    print(traceback.format_exc())
+        time.sleep(10)
+        print('Tick')
