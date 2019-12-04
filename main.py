@@ -591,10 +591,13 @@ def solve(G, offers, start, homes, name, l=10, phi=0.35, phi_delta=0.01):
     return sol
 
 def get_all_inputs():
-    res = []
-    for i in iglob('inputs/*'):
-        res.append(i.split('/')[1].split('.')[0])
-    return sorted(res)
+    res = list(iglob('inputs/*_100.in'))
+    # + list(iglob('inputs/*_50.in')) + list(iglob('inputs/*_200.in'))
+    return [i.split('/')[1].split('.')[0] for i in res]
+
+def get_all_outputs():
+    res = list(iglob('outputs/*'))
+    return set([i.split('/')[1].split('.')[0] for i in res])
 
 if __name__ == '__main__':
     #main('1_50')
@@ -616,8 +619,9 @@ if __name__ == '__main__':
     from tornado.util import TimeoutError
     import traceback
     all_inputs = get_all_inputs()
-    client = Client("tcp://34.83.56.189:8786")
-    tasks = all_inputs[:50]
+    existing_outputs = get_all_outputs()
+    client = Client("tcp://35.233.254.255:8786")
+    tasks = list(filter(lambda x: x not in existing_outputs, all_inputs))
     done_tasks = set()
     futures = []
     for t in tasks:
@@ -630,13 +634,15 @@ if __name__ == '__main__':
             if t not in done_tasks and f.done():
                 done_tasks.add(t)
                 try:
-                    res = f.result(5)
+                    res = f.result(1)
                     fout = open(get_output_path(t), 'w')
                     fout.write(res)
                     print('Wrote', t)
                     fout.close()
-                except TimeoutError:
+                except TimeoutError as e:
+                    print(e)
                     print('Could not gather result {}, retrying...'.format(t))
+                    print(traceback.format_exc())
                     done_tasks.remove(t)
                 except Exception:
                     print(t, 'failed')
