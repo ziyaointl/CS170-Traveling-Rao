@@ -261,8 +261,9 @@ def TSP(G, nodes, start, name):
         l = len(nodes)
         nodes_cp = nodes[:]
         nodes_cp.remove(start)
+        ans = []
         if l == 2 or l == 3:
-            return [start] + nodes_cp + [start]
+            ans = [start] + nodes_cp + [start]
         elif l == 4:
             a,b,c = nodes_cp[0], nodes_cp[1], nodes_cp[2]
             sol1 = [start] + nodes_cp + [start]
@@ -271,11 +272,13 @@ def TSP(G, nodes, start, name):
             sol4 = [start, b ,c ,a, start]
             sol5 = [start, c, a, b, start]
             sol6 = [start, c, b, a, start]
-            #3 of them are over calculated 
-            return min([sol1,sol2,sol3,sol4,sol5,sol6], key= lambda x:cal_TSP_cost(G,start,x))
+            #3 of them are over calculated
+            ans = min([sol1,sol2,sol3,sol4,sol5,sol6], key= lambda x:cal_TSP_cost(G,start,x))
             #return Google_inefficient_TSP(G,nodes,start,name)
         else:
             print("incorrect parameter for naive TSP")
+        superprint('TSP call finished', ans)
+        return ans
 
     if len(nodes) <= 4 :
         print("Calling naive TSP (made on brute force by Rui Chen)")
@@ -456,7 +459,7 @@ def l_consecutive_drop(G, potential_sol, l, homes, offers, start):
 def helper_add(G, sol, node, homes, offers, start, name):
     cycle = sol['path']  # cycle is a list of integer
     assert node not in cycle, "node added must not in the cycle"
-    new_list = cycle + [node]
+    new_list = list(set(cycle + [node]))
     tsp_path = TSP(G, new_list, start, name)
     # assert len(cycle) >= 2, "current implementation cannot support minor edge case"
     """cost = sol['cost']
@@ -573,7 +576,8 @@ def solve(G, offers, start, homes, name, l=10, phi=0.35, phi_delta=0.01):
     potential_sol = deepcopy(sol)
     while phi > 0:
         while True:
-            potential_sol = l_consecutive_drop(G, potential_sol, l, homes, offers, start) 
+            potential_sol = l_consecutive_drop(G, potential_sol, l, homes, offers, start)
+            print('After dropping', potential_sol)
             verify_path(G, potential_sol['path'], homes, start)
             potential_sol = insert(G, potential_sol, homes, offers, start, name)
             verify_path(G, potential_sol['path'], homes, start)
@@ -589,7 +593,7 @@ def solve(G, offers, start, homes, name, l=10, phi=0.35, phi_delta=0.01):
 def get_all_inputs():
     res = []
     for i in iglob('inputs/*'):
-        res.append(i)
+        res.append(i.split('/')[1].split('.')[0])
     return sorted(res)
 
 if __name__ == '__main__':
@@ -600,16 +604,24 @@ if __name__ == '__main__':
     # TODO: Error handling
     # TODO: Kubernetes
     # TODO: Google TSP and spindly graph test
+    if len(sys.argv) > 1:
+        name = sys.argv[1]
+        res = main(read_file(get_input_path(name)), name)
+        fout = open(get_output_path(name), 'w')
+        fout.write(res)
+        print('Wrote', name)
+        fout.close()
+        exit(0)
     from dask.distributed import Client
     from tornado.util import TimeoutError
     import traceback
     all_inputs = get_all_inputs()
-    client = Client("tcp://104.199.118.95:8786")
+    client = Client("tcp://34.83.56.189:8786")
     tasks = all_inputs[:50]
     done_tasks = set()
     futures = []
     for t in tasks:
-        future = client.submit(main, read_file(t), t.split('/')[1])
+        future = client.submit(main, read_file(get_input_path(t)), t)
         futures.append(future)
     while len(done_tasks) < len(futures):
         for i in range(len(futures)):
@@ -618,16 +630,16 @@ if __name__ == '__main__':
             if t not in done_tasks and f.done():
                 done_tasks.add(t)
                 try:
-                    res = futures[i].result(5)
-                    fout = open('outputs/' + tasks[i].split('/')[1], 'w')
+                    res = f.result(5)
+                    fout = open(get_output_path(t), 'w')
                     fout.write(res)
-                    print('Wrote', tasks[i])
+                    print('Wrote', t)
                     fout.close()
                 except TimeoutError:
                     print('Could not gather result {}, retrying...'.format(t))
                     done_tasks.remove(t)
                 except Exception:
-                    print(tasks[i], 'failed')
+                    print(t, 'failed')
                     print(traceback.format_exc())
         time.sleep(10)
         print('Tick')
