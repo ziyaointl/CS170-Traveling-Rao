@@ -456,7 +456,7 @@ def l_consecutive_drop(G, potential_sol, l, homes, offers, start):
 def helper_add(G, sol, node, homes, offers, start, name):
     cycle = sol['path']  # cycle is a list of integer
     assert node not in cycle, "node added must not in the cycle"
-    new_list = cycle[:] + [node]
+    new_list = cycle + [node]
     tsp_path = TSP(G, new_list, start, name)
     # assert len(cycle) >= 2, "current implementation cannot support minor edge case"
     """cost = sol['cost']
@@ -520,7 +520,7 @@ def shake(G, potential_sol, phi, homes, offers, start, name):
 
         potential_sol_cp = helper_add(G, potential_sol_cp, node, homes, offers, start, name)
         if potential_sol_cp['cost'] < (phi + 1) * potential_sol['cost']:
-            potential_sol_final = helper_add(G, deepcopy(potential_sol_final), node, homes, offers, start, name)
+            potential_sol_final = helper_add(G, potential_sol_final, node, homes, offers, start, name)
     return potential_sol_final
 
 
@@ -601,9 +601,10 @@ if __name__ == '__main__':
     # TODO: Kubernetes
     # TODO: Google TSP and spindly graph test
     from dask.distributed import Client
+    from tornado.util import TimeoutError
     import traceback
     all_inputs = get_all_inputs()
-    client = Client("tcp://34.82.71.216:8786")
+    client = Client("tcp://104.199.118.95:8786")
     tasks = all_inputs[:50]
     done_tasks = set()
     futures = []
