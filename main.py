@@ -254,7 +254,7 @@ def TSP(G, nodes, start, name):
         assert l <= 5, "should never call naive on too complex cases!"
         travel_cost = 0
         for i in range(1, l):
-            travel_cost += G[path[i - 1]][path[i]]['weight']
+            travel_cost += G[cycle[i - 1]][cycle[i]]['weight']
         return travel_cost
 
     def naive_TSP(G, nodes, start, name):
@@ -520,7 +520,7 @@ def shake(G, potential_sol, phi, homes, offers, start, name):
 
         potential_sol_cp = helper_add(G, potential_sol_cp, node, homes, offers, start, name)
         if potential_sol_cp['cost'] < (phi + 1) * potential_sol['cost']:
-            potential_sol_final = helper_add(G, potential_sol_final, node, homes, offers, start, name)
+            potential_sol_final = helper_add(G, deepcopy(potential_sol_final), node, homes, offers, start, name)
     return potential_sol_final
 
 
