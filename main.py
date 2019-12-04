@@ -640,9 +640,10 @@ if __name__ == '__main__':
                     print('Wrote', t)
                     fout.close()
                 except TimeoutError as e:
+                    print(e)
                     print('Could not gather result {}, retrying...'.format(t))
                     print(traceback.format_exc())
-                    # done_tasks.remove(t)
+                    done_tasks.remove(t)
                 except Exception:
                     print(t, 'failed')
                     print(traceback.format_exc())
