@@ -1,3 +1,4 @@
+import re
 import sys
 sys.path.append('..')
 sys.path.append('../..')
@@ -591,21 +592,23 @@ def solve(G, offers, start, homes, name, l=10, phi=0.35, phi_delta=0.01):
     return sol
 
 def get_all_inputs():
-    res = list(iglob('inputs/*_100.in'))
-    # + list(iglob('inputs/*_50.in')) + list(iglob('inputs/*_200.in'))
+    res = list(iglob('inputs/*_200.in')) + list(iglob('inputs/*_50.in')) + list(iglob('inputs/*_100.in'))
     return [i.split('/')[1].split('.')[0] for i in res]
 
 def get_all_outputs():
     res = list(iglob('outputs/*'))
     return set([i.split('/')[1].split('.')[0] for i in res])
 
+def get_all_failures():
+    f = open('log.txt', 'r')
+    res = set()
+    for l in f:
+        m = re.search(r'failed', l)
+        if m:
+            res.add(m.string.strip().split(' ')[0])
+    return res
+
 if __name__ == '__main__':
-    #main('1_50')
-    # TODO: Automatic task discovery
-    # TODO: Automatic completion detection
-    # TODO: Adaptive graph weight handling
-    # TODO: Error handling
-    # TODO: Kubernetes
     # TODO: Google TSP and spindly graph test
     if len(sys.argv) > 1:
         name = sys.argv[1]
@@ -620,8 +623,11 @@ if __name__ == '__main__':
     import traceback
     all_inputs = get_all_inputs()
     existing_outputs = get_all_outputs()
-    client = Client("tcp://35.233.254.255:8786")
-    tasks = list(filter(lambda x: x not in existing_outputs, all_inputs))
+    failures = get_all_failures()
+    client = Client("tcp://34.83.248.90:8786")
+    tasks = list(filter(lambda x: (x not in existing_outputs) and (x not in failures), all_inputs))
+    print('failures', failures)
+    print('tasks', tasks)
     done_tasks = set()
     futures = []
     for t in tasks:
