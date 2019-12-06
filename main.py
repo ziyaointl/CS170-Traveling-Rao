@@ -357,16 +357,14 @@ def main(input_data, filename):
 
     # 2. Preprocess adjacency matrix
     r = 0
-    if filename in ['214_200', '71_200', '17_200', '89_100', '211_200', '234_200', '72_200', '226_200', '124_100', '297_200', '254_200','100_200', '180_200','131_100', '162_200', '237_100', '12_200', '254_100', '114_200']:
+    if filename in ['160_100', '214_200', '71_200', '17_200', '89_100', '211_200', '72_200', '226_200', '124_100', '297_200', '254_200','100_200', '180_200','131_100', '162_200', '237_100', '12_200', '254_100', '114_200', '114_100', '108_100', '113_200', '97_200', '75_100', '42_200', '237_200', '253_200']:
         r = 1
-    elif filename == ['108_200', '162_200']:
+    elif filename in ['108_200', '162_200', '131_200', '234_200']:
         r = 0.1
-    elif filename in ['145_200', '277_200']:
+    elif filename in ['145_200', '277_200', '130_200']:
         r = 0.01
-    elif filename == '131_200':
-        r = 100
     elif filename == '272_200':
-        r = 0.001
+        r = 0.0001
     elif filename in ['30_200', '83_200', '228_100', '227_100']:
         r = 10000
     elif filename in ['285_100', '216_200']:
@@ -375,7 +373,6 @@ def main(input_data, filename):
                                              starting_car_location, adjacency_matrix, r)
     print('locations', location_mapping)
     print('offers', offers)
-    print('shortest_paths', shortest_paths)
     print(nx.to_numpy_matrix(G))
     # print('TSP', TSP(G, G.nodes(), location_mapping[starting_car_location]))
 
