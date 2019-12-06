@@ -152,7 +152,7 @@ def cost_of_solution(G, car_cycle, dropoff_mapping):
             for house in dropoff_mapping[drop_location]:
                 walking_cost += shortest[drop_location][house]
 
-def preprocess(num_of_locations, num_houses, list_locations, list_houses, starting_car_location, adjacency_matrix):
+def preprocess(num_of_locations, num_houses, list_locations, list_houses, starting_car_location, adjacency_matrix, ratio = 0):
     """
     Preprocess adjacency matrix
 
@@ -207,10 +207,11 @@ def preprocess(num_of_locations, num_houses, list_locations, list_houses, starti
             if G.edges[m, n]['weight'] > max_dis:
                 max_dis = G.edges[m, n]['weight']
     #2. rescale edges based on max_dis
-    upper_bound = 2**25 - 1
-    ratio = 10**5
-    if ratio > (upper_bound / max_dis):
-        ratio = upper_bound / max_dis
+    if ratio <= 0:
+        upper_bound = 2 ** 25 - 1
+        ratio = 10 ** 5
+        if ratio > (upper_bound / max_dis):
+            ratio = upper_bound / max_dis
     for m in range(num_of_locations):
         for n in range(m, num_of_locations):
             G.edges[m, n]['weight'] =  int(G.edges[m, n]['weight'] * ratio)
@@ -355,8 +356,19 @@ def main(input_data, filename):
         input_data)
 
     # 2. Preprocess adjacency matrix
+    r = 0
+    if filename in ['100_200', '180_200','131_100', '162_200', '237_100', '12_200']:
+        r = 1
+    elif filename == '162_200':
+        r = 0.1
+    elif filename == '145_200':
+        r = 0.01
+    elif filename == '131_200':
+        r = 100
+    elif filename == '272_200':
+        r = 0.001
     G, location_mapping, offers, shortest_paths = preprocess(num_of_locations, num_houses, list_locations, list_houses,
-                                             starting_car_location, adjacency_matrix)
+                                             starting_car_location, adjacency_matrix, r)
     print('locations', location_mapping)
     print('offers', offers)
     print('shortest_paths', shortest_paths)
