@@ -378,19 +378,21 @@ def main(input_data, filename):
         r = 1
     elif filename in ['234_200', '114_100']:
         r = 0.1
-    elif filename in ['131_200', '145_200', '277_200', '130_200', '162_200', '108_200', '114_200']:
+    elif filename in ['145_200', '277_200', '130_200', '162_200', '114_200']:
         r = 0.01
+    elif filename in ['131_200', '108_200']:
+        r = 0.001
     elif filename in ['272_200']:
         r = 0.0001
     elif filename in ['153_200']:
         r = 0.000001
     elif filename in ['30_200', '83_200', '228_100']:
         r = 10000
-    elif filename in ['285_100', '216_200', '356_200', '173_200']:
+    elif filename in ['285_100', '216_200', '356_200']:
         r = 1000
     elif filename in ['131_200']:
         r = 100
-    elif filename in ['204_200']:
+    elif filename in ['204_200', '173_200']:
         r = 10
     G, location_mapping, offers, shortest_paths = preprocess(num_of_locations, num_houses, list_locations, list_houses,
                                              starting_car_location, adjacency_matrix,filename, r)
