@@ -25,6 +25,16 @@ def validate_output(input_file, output_file, params=[]):
     return input_error, cost, message
 
 
+def silent_validate_output(input_file, output_file, params=[]):
+    input_data = utils.read_file(input_file)
+    output_data = utils.read_file(output_file)
+
+    input_message, input_error = input_validator.tests(input_file)
+    cost, message = tests(input_data, output_data, params=params)
+    return cost
+
+
+
 def validate_all_outputs(input_directory, output_directory, params=[]):
     input_files = utils.get_files_with_extension(input_directory, '.in')
     output_files = utils.get_files_with_extension(output_directory, '.out')
