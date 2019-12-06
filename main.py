@@ -357,7 +357,7 @@ def main(input_data, filename):
 
     # 2. Preprocess adjacency matrix
     r = 0
-    if filename in ['89_100', '211_200', '234_200', '72_200', '226_200', '124_100', '297_200', '100_200', '180_200','131_100', '162_200', '237_100', '12_200', '254_100', '114_200']:
+    if filename in ['214_200', '71_200', '17_200', '89_100', '211_200', '234_200', '72_200', '226_200', '124_100', '297_200', '254_200','100_200', '180_200','131_100', '162_200', '237_100', '12_200', '254_100', '114_200']:
         r = 1
     elif filename == ['108_200', '162_200']:
         r = 0.1
@@ -367,9 +367,9 @@ def main(input_data, filename):
         r = 100
     elif filename == '272_200':
         r = 0.001
-    elif filename in ['30_200', '83_200', '228_100']:
+    elif filename in ['30_200', '83_200', '228_100', '227_100']:
         r = 10000
-    elif filename in ['285_100']:
+    elif filename in ['285_100', '216_200']:
         r = 1000
     G, location_mapping, offers, shortest_paths = preprocess(num_of_locations, num_houses, list_locations, list_houses,
                                              starting_car_location, adjacency_matrix, r)
