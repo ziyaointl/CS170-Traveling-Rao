@@ -363,7 +363,7 @@ def main(input_data, filename):
         r = 0.1
     elif filename in ['145_200', '277_200', '130_200']:
         r = 0.01
-    elif filename == '272_200':
+    elif filename in ['153_200', '272_200']:
         r = 0.0001
     elif filename in ['30_200', '83_200', '228_100', '227_100']:
         r = 10000
