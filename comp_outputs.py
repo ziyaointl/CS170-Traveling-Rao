@@ -17,7 +17,8 @@ def comp_output(input_folder, output1_folder, output2_folder):
         input = get_input_filename(input_folder, name)
         cost1 = silent_validate_output(input, output1)
         cost2 = silent_validate_output(input, output2)
-        print('Cost for', name, cost1, cost2)
+        if cost1 >= cost2:
+            print('Cost for', name, cost1, cost2)
 
 if __name__ == '__main__':
     comp_output(sys.argv[1], sys.argv[2], sys.argv[3])
