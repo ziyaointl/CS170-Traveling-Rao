@@ -11,6 +11,7 @@ docker run -it ziyaointl/traveling-rao:0.0.1 bash
 
 ### Run on single input
 Note: Please perform the following operations inside the docker environment
+
 1.
 ```bash
 cd CS170-Traveling-Rao
@@ -32,6 +33,7 @@ helm install -f values.yaml ./dask/dask -n dask
 helm status dask
 ```
 Note: Please perform the following operations inside the docker environment
+
 5. Replace the scheduler ip in main.py
 6. Launch! The program will automatically detect unfinished outputs and submit them to the scheduler.
 ```bash
