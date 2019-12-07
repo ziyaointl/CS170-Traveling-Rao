@@ -1,10 +1,10 @@
-LesLilas Nahorkatiya Garbsen Rivas Twante SenaMadureira Pezinok SantanadoLivramento CapimGrosso MonteAlegre Kambove Prostejov Vaniyambadi Yafo Shieli Mocoa Fuxin Nagar FetestiGara PortoVelho Rhondda Anjarah Khulm Mabopane Baramula Acireale Ontinyent Vyazniki Skelmersdale FortWorth Langenhorn Haripur Pozzuoli Escada Sorada Oerlinghausen Belalcazar Kairouan Johnston Wenchi Hangu Daokou Sosnovka GuaMusang Andrychow Turek PriegodeCordoba Bury GongdanglegiKulon Sobue Arzamas Shimofurano Gorgan Manacapuru Shurugwi Kemise SouthSaintPaul Ibirataia Hirosaki TagbilaranCity MineralnyeVody ChalcodeDiazCovarrub BlueIsland Kotka NoblePark SanJuandelaMaguana Gunzenhausen Kineshma SpanishTown Lloydminster Korsakov NahiyatashShinafiyah SaintCyrlEcole Haora SenadorPompeu Angleton Braila Morwa Ortaca Itororo Shchekino AshtonunderLyne Aringay Kaifeng Butuan Mandan Gowurdak EastLongmeadow Tabou Embu Battambang AinArnat MadinatHamad Biskra Izhevsk KotRadhaKishan HaciendaLaCalera Acarau Akcaabat Arang Zhaodong Aracuai AinBessem LesLilas 
-97
+LesLilas Kambove MonteAlegre CapimGrosso SantanadoLivramento SaintCyrlEcole Haora SenadorPompeu Angleton SouthSaintPaul Kemise Shurugwi Manacapuru Gorgan NahiyatashShinafiyah Korsakov Tabou Embu WestIslip Mauban Akcaabat Acarau HaciendaLaCalera KotRadhaKishan Izhevsk Ibirataia Hirosaki TagbilaranCity MineralnyeVody ChalcodeDiazCovarrub BlueIsland MadinatHamad AinArnat Battambang Haripur Langenhorn FortWorth Skelmersdale Vyazniki Ontinyent Acireale Butuan Kaifeng Aringay AshtonunderLyne Shchekino Espiye GongdanglegiKulon VillaPauladeSarmient Pozzuoli Escada Pezinok SenaMadureira Twante Rivas Garbsen Sobue Arzamas Shimofurano Prostejov Vaniyambadi Yafo Shieli Mocoa Fuxin Nagar FetestiGara PortoVelho Kotka NoblePark SanJuandelaMaguana Gunzenhausen Kineshma SpanishTown Lloydminster Khulm Anjarah Rhondda Mabopane Baramula Sorada Oerlinghausen Belalcazar Kairouan Johnston Wenchi Itororo Ortaca Morwa Braila Bury PriegodeCordoba Turek Andrychow GuaMusang Sosnovka Daokou Hangu Gowurdak EastLongmeadow Wangon Arang Zhaodong Aracuai AinBessem LesLilas 
+100
 Khulm Khulm
 Kemise Kemise
 Hirosaki Hirosaki
 SanJuandelaMaguana SanJuandelaMaguana
-Shchekino Shchekino Espiye
+Shchekino Shchekino
 Braila Braila
 SenaMadureira SenaMadureira
 Shimofurano Shimofurano
@@ -32,6 +32,7 @@ Johnston Johnston
 Nagar Nagar
 Turek Turek
 Belalcazar Belalcazar
+Espiye Espiye
 SenadorPompeu SenadorPompeu
 KotRadhaKishan KotRadhaKishan
 BlueIsland BlueIsland
@@ -45,7 +46,7 @@ Mocoa Mocoa
 Kaifeng Kaifeng
 Zhaodong Zhaodong
 Fuxin Fuxin
-Embu WestIslip Embu
+WestIslip WestIslip
 SaintCyrlEcole SaintCyrlEcole
 Akcaabat Akcaabat
 Anjarah Anjarah
@@ -66,7 +67,7 @@ Shieli Shieli
 Prostejov Prostejov
 NahiyatashShinafiyah NahiyatashShinafiyah
 Bury Bury
-GongdanglegiKulon VillaPauladeSarmient
+VillaPauladeSarmient VillaPauladeSarmient
 MineralnyeVody MineralnyeVody
 Izhevsk Izhevsk
 Kotka Kotka
@@ -86,8 +87,10 @@ Twante Twante
 Sorada Sorada
 Daokou Daokou
 Escada Escada
-EastLongmeadow EastLongmeadow Wangon
+EastLongmeadow EastLongmeadow
+Embu Embu
 Korsakov Korsakov
+Wangon Wangon
 Battambang Battambang
 MonteAlegre MonteAlegre
 Wenchi Wenchi
